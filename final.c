@@ -819,9 +819,10 @@ int main(int argc, char *argv[])
         }
                 char* fname;
         fname=params_final[1];
-                pc=atoi(params_final[2]);
-                gpr_arr[2]=atoi(params_final[3]);
-                printf("\nfilename=%s ,starting address=%d ,stack address=%d\n",fname,pc,gpr_arr[2]);
+ 	unsigned int pc_dec=0;
+        pc=hextodec(params_final[2],pc_dec);        
+	gpr_arr[2]=atoi(params_final[3]);
+        printf("\nfilename=%s ,starting address=%d ,stack address=%d\n",fname,pc,gpr_arr[2]);
         FILE *fp = fopen(fname, "r");
         char cr;
         size_t lines = 0;
