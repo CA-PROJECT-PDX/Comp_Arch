@@ -170,225 +170,6 @@ void two_params(char first_param[100],char sec_param[100]){
                         }
 }
 
-void LB(int rd,int rs1, int imm){
-    int imm_new = imm>>11;
-    //int mask=4294963200;
-    //int regmask=4294967040;
-    unsigned int location =0;
-    if (imm_new)
-    {
-		unsigned int up=0xFFF;
-        imm=up-imm+1;//2's complement
-		imm = -imm;  
-		//imm = mask | imm;
-    }
-	location = gpr_arr[rs1]+imm;
-    
-    int forsignEinReg = mem_arr[location];
-    int negorpos = forsignEinReg >> 7;
-    
-    if(negorpos)
-    {
-		unsigned int up1=0xFF;
-        forsignEinReg=up1-forsignEinReg+1;//2's complement
-		forsignEinReg = -forsignEinReg;
-        //forsignEinReg = regmask | forsignEinReg;
-        gpr_arr[rd] = forsignEinReg;
-    }
-    else
-    {
-        gpr_arr[rd] = mem_arr[location];
-    }
-}
-
-void LH(int rd,int rs1, int imm){
-    int imm_new = imm>>11;
-    //int mask=4294963200;
-    //int regmask=4294901760;
-    unsigned int location =0;
-    if (imm_new)
-    {
-		unsigned int up=0xFFF;
-        imm=up-imm+1;//2's complement
-		imm = -imm; 
-        //imm = mask | imm;
-    }
-	location = gpr_arr[rs1]+imm;
-	
-    if(location % 2 ==0)
-    {
-		int lsb = mem_arr[location];
-		int msb = mem_arr[location+1];
-		msb = msb<<8;
-		int forsignEinReg = msb +lsb;
-		int negorpos = forsignEinReg >> 15;
-    
-		if(negorpos)
-		{
-			unsigned int up1=0xFF;
-			forsignEinReg=up1-forsignEinReg+1;//2's complement
-			forsignEinReg = -forsignEinReg;
-			//forsignEinReg = regmask | forsignEinReg;
-		}
-        gpr_arr[rd] = forsignEinReg;    
-	}
-	else
-	{
-		printf("\n lh failed as the memory array location is not aligned");
-	}
-}
-
-void LW(int rd,int rs1, int imm){
-    int imm_new = imm>>11;
-    //int mask=4294963200;
-    unsigned int location =0;
-    if (imm_new)
-    {
-		unsigned int up=0xFFF;
-        imm=up-imm+1;//2's complement
-		imm = -imm; 
-        //imm = mask | imm;
-    }
-        location = gpr_arr[rs1]+imm;
-		
-    if(location % 4 ==0)
-    {
-		int one = mem_arr[location];
-		int two = mem_arr[location+1];
-		two = two<<8;
-		int three = mem_arr[location+2];
-		three = three<16;
-		int four = mem_arr[location+3];
-		four = four<<24;
-		int forsignEinReg = one+two+three+four;
-		
-		gpr_arr[rd] = forsignEinReg;
-	}
-	else
-	{
-		printf("\n lw failed as the memory array location is not aligned");
-	}
-}
-
-void LBU(int rd,int rs1, int imm){
-    int imm_new = imm>>11;
-    //int mask=4294963200;
-    unsigned int location =0;
-	if (imm_new)
-    {
-		unsigned int up=0xFFF;
-        imm=up-imm+1;//2's complement
-		imm = -imm; 
-        //imm = mask | imm;
-	}
-    location = gpr_arr[rs1]+imm;
-    gpr_arr[rd] = mem_arr[location];
-}
-
-void LHU(int rd,int rs1, int imm){
-    int imm_new = imm>>11;
-    //int mask=4294963200;
-    unsigned int location =0;
-	if (imm_new)
-    {
-		unsigned int up=0xFFF;
-        imm=up-imm+1;//2's complement
-		imm = -imm; 
-        //imm = mask | imm;
-	}
-
-    location = gpr_arr[rs1]+imm;
-    if(location % 2 ==0)
-    {
-		int lsb = mem_arr[location];
-		int msb = mem_arr[location+1];
-		msb = msb<<8;
-		int forsignEinReg = msb +lsb;
-	
-		gpr_arr[rd] = forsignEinReg;
-	}
-	else
-	{
-		printf("\n lb failed as the memory array location is not aligned");
-	}
-}
-
-void SB(int rs1,int rs2, int imm){
-    int imm_new = imm>>11;
-    //int mask=4294963200;
-    //int regmask=4294967040;
-    unsigned int location =0;
-    if (imm_new)
-    {
-		unsigned int up=0xFFF;
-        imm=up-imm+1;//2's complement
-		imm = -imm; 
-        //imm = mask | imm;
-    }
-        location = gpr_arr[rs1]+imm;
-
-    mem_arr[location] = gpr_arr[rs2];
-}
-
-void AUIPC(int rd,int imm, int pc1){
-int imm_new;
-imm_new = imm<<12;
-gpr_arr[rd] = imm_new+pc1;
-}
-
-void SH(int rs1,int rs2, int imm){
-    int imm_new = imm>>11;
-    //int mask=4294963200;
-    unsigned int location =0;
-    if (imm_new)
-    {
-		unsigned int up=0xFFF;
-        imm=up-imm+1;//2's complement
-		imm = -imm; 
-        //imm = mask | imm;
-    }
-        location = gpr_arr[rs1]+imm;
-    
-    if(location %2 ==0)
-    {
-    mem_arr[location] = gpr_arr[rs2];
-    mem_arr[location+1] = gpr_arr[rs2]>>8;
-    }
-    else
-    {
-        printf("\n The memory location is not aligned");
-    }
-}
-
-void SW(int rs1,int rs2, int imm){
-    int imm_new = imm>>11;
-    //int mask=4294963200;
-    unsigned int location =0;
-    if (imm_new)
-    {
-		unsigned int up=0xFFF;
-        imm=up-imm+1;//2's complement
-		imm = -imm; 
-		//imm = mask | imm;
-    }
-        location = gpr_arr[rs1]+imm;
-    
-    if(location %4 ==0)
-    {
-    mem_arr[location] = gpr_arr[rs2];
-    mem_arr[location+1] = gpr_arr[rs2]>>8;
-    mem_arr[location+2] = gpr_arr[rs2]>>16;
-    mem_arr[location+3] = gpr_arr[rs2]>>24;
-    }
-    else
-    {
-        printf("\n The memory location is not aligned");
-    }
-}
-
-void LUI(int rd,int imm){
-gpr_arr[rd] = imm<<12;
-}
 
 void BEQ(int imm,int rs1,int rs2){
         if(gpr_arr[rs1] == gpr_arr[rs2]){
@@ -823,63 +604,63 @@ void decode_instr(unsigned int addr, unsigned int inst)
                     } else if (funct7 == 32)
                     {
                         printf("Calling SUB function");
-			SUB(rd, rs1, rs2);
+						SUB(rd, rs1, rs2);
                     } else
                     {
                         printf("Invalid instruction");
-			exit(0);
+						exit(0);
                     }
                     break;
 
                 case 1: // SLL
                     printf("Calling SLL function");
-		    SLL(rd, rs1, rs2);
+					SLL(rd, rs1, rs2);
                     break;
 
                 case 2: // SLT
                     printf("Calling SLT function");
-		    SLT(rd, rs1, rs2);
+					SLT(rd, rs1, rs2);
                     break;
 
                 case 3: // SLTU
                     printf("Calling SLTU function");
-		    printf("\nFUNCTION NOT YET IMPLEMENTED"); //TODO
+					printf("\nFUNCTION NOT YET IMPLEMENTED"); //TODO
                     break;
 
                 case 4: // XOR
                     printf("Calling XOR function");
-		    XOR(rd, rs1, rs2);
+					XOR(rd, rs1, rs2);
                     break;
 
                 case 5: // SRL/SRA
                     if(funct7 == 0)
                     {
                         printf("Calling SRL function");
-			SRL(rd, rs1, rs2);
+						SRL(rd, rs1, rs2);
                     } else if (funct7 == 32)
                     {
                         printf("Calling SRA function");
-			printf("\nFUNCTION NOT YET IMPLEMENTED"); //TODO
+						printf("\nFUNCTION NOT YET IMPLEMENTED"); //TODO
                     } else
                     {
                         printf("Invalid instruction");
-			exit(0);
+						exit(0);
                     }
                     break;
 
                 case 6: // OR
                     printf("Calling OR function");
-		    OR(rd, rs1, rs2);
+					OR(rd, rs1, rs2);
                     break;
 
                 case 7: // AND
                     printf("Calling AND function");
-		    AND(rd, rs1, rs2);
+					AND(rd, rs1, rs2);
                     break;
 
                 default:
                     printf("Invalid Instruction");
-		    exit(0);
+					exit(0);
             }
             break;
 
@@ -909,69 +690,69 @@ void decode_instr(unsigned int addr, unsigned int inst)
             imm = mask & inst;
             imm = imm >> 20;
 
-	    if(debug_en){
+			if(debug_en){
             printf("rs1 = %u, shamt = %u, rd = %u", rs1, shamt, rd);
             printf("funct3 = %u\n", funct3);
             printf("funct7 = %u\n", funct7);
             printf("imm = %u\n", imm);
-	    }
+			}
 
             switch(funct3){
 
                 case 0: //ADDI
                     printf("Calling ADDI function");
-		    ADDI(rd, rs1, imm);
+					ADDI(rd, rs1, imm);
                     break;
 
                 case 1: //SLLI
                     printf("Calling SLLI function");
-		    SLLI(rd, rs1, shamt);
+					SLLI(rd, rs1, shamt);
                     break;
 
                 case 2: //SLTI
                     printf("Calling SLTI function");
-		    SLTI(rd, rs1, imm);
+					SLTI(rd, rs1, imm);
                     break;
 
                 case 3: //SLTIU
                     printf("Calling SLTIU function");
-		    SLTIU(rd, rs1, imm);
+					SLTIU(rd, rs1, imm);
                     break;
 
                 case 4: //XORI
                     printf("Calling XORI function");
-		    XORI(rd, rs1, imm);
+					XORI(rd, rs1, imm);
                     break;
 
                 case 5: //SRLI or SRAI
                     if(funct7 == 0)
                     {
                         printf("Calling SRLI function");
-			SRLI(rd, rs1, shamt);
+						SRLI(rd, rs1, shamt);
                     } else if (funct7 == 32)
                     {
                         printf("Calling SRAI function");
-			printf("\n FUNCTION NOT YET IMPLEMENTED"); //TODO
+						printf("\n FUNCTION NOT YET IMPLEMENTED"); //TODO
                     } else
                     {
                         printf("Invalid instruction");
-			exit(0);
+						exit(0);
                     }
                     break;
 
                 case 6: //ORI
                     printf("Calling ORI function");
-		    ORI(rd, rs1, imm);
+					ORI(rd, rs1, imm);
                     break;
 
                 case 7: //ANDI
                     printf("Calling ANDI function");
-		    ANDI(rd, rs1, imm);
+					ANDI(rd, rs1, imm);
                     break;
 
                 default:
                     printf("Invalid Instruction");
-		    exit(0);
+					exit(0);
             }
             break;
 
@@ -1000,33 +781,29 @@ void decode_instr(unsigned int addr, unsigned int inst)
             imm2 = imm2<<5;
             imm = imm2 | imm1;
 
-	    if(debug_en){
+			if(debug_en){
             printf("rs1 = %u, rs2 = %u, rd = %u", rs1, rs2, rd);
             printf("funct3 = %u\n", funct3);
             printf("funct7 = %u\n", funct7);
             printf("imm = %u\n", imm);
-	    }
+			}
 
             switch(funct3){
 
                 case 0: //SB
                     printf("Calling SB function");
-		    SB(rs1, rs2, imm);
                     break;
 
                 case 1: //SH
                     printf("Calling SH function");
-		    SH(rs1, rs2, imm);
                     break;
 
                 case 2: //SW
                     printf("Calling SW function");
-		    SW(rs1, rs2, imm);
                     break;
 
                 default:
                     printf("Invalid Instruction");
-		    exit(0);
             }
                 break;
 
@@ -1048,43 +825,37 @@ void decode_instr(unsigned int addr, unsigned int inst)
             imm = mask & inst;
             imm = imm >> 20;
 
-	    if(debug_en){
+			if(debug_en){
             //printf("rs1 = %u, shamt = %u, rd = %u", rs1, shamt, rd);
             printf("funct3 = %u\n", funct3);
             //printf("funct7 = %u\n", funct7);
             printf("imm = %u\n", imm);
-	    }
+			}
 
             switch(funct3){
 
                 case 0: //LB
                     printf("Calling LB function");
-		    LB(rd, rs1, imm);
                     break;
 
                 case 1: //LH
                     printf("Calling LH function");
-		    LH(rd, rs1, imm);
                     break;
 
                 case 2: //LW
                     printf("Calling LW function");
-		    LW(rd, rs1, imm);
                     break;
 
                 case 4: //LBU
                     printf("Calling LBU function");
-		    LBU(rd, rs1, imm);
                     break;
 
                 case 5: //LHU
                     printf("Calling LHU function");
-		    LHU(rd, rs1, imm);
                     break;
 
                 default:
                     printf("Invalid Instruction");
-		    exit(0);
             }
                 break;
 
@@ -1118,54 +889,43 @@ void decode_instr(unsigned int addr, unsigned int inst)
             //imm2 = imm2<<5;
             imm = im3<<1;
 
-	    if(debug_en){
+			if(debug_en){
             printf("rs1 = %u, rs2 = %u, rd = %u", rs1, rs2, rd);
             printf("funct3 = %u\n", funct3);
             printf("funct7 = %u\n", funct7);
             printf("imm = %u\n", imm);
-	    }
+			}
 
             switch(funct3){
 
                 case 0: //BEQ
                     printf("Calling BEQ function");
-                    BEQ(imm, rs1, rs2);
-                    pc_flag = 1;
+                                //BEQ(imm, rs1, rs2);
+                                //pc_flag = 1;
                     break;
 
                 case 1: //BNE
                     printf("Calling BNE function");
-                    BNE(imm, rs1, rs2);
-                    pc_flag = 1;
                     break;
 
                 case 4: //BLT
                     printf("Calling BLT function");
-                    BLT(imm, rs1, rs2);
-                    pc_flag = 1;
                     break;
 
                 case 5: //BGE
                     printf("Calling BGE function");
-                    BGE(imm, rs1, rs2);
-                    pc_flag = 1;
                     break;
 
                 case 6: //BLTU
                     printf("Calling BLTU function");
-                    BLTU(imm, rs1, rs2);
-                    pc_flag = 1;
                     break;
 
                 case 7: //BGEU
                     printf("Calling BGEU function");
-                    BGEU(imm, rs1, rs2);
-                    pc_flag = 1;
                     break;
 
                 default:
                     printf("Invalid Instruction");
-		    exit(0);
             }
                 break;
 
@@ -1187,22 +947,19 @@ void decode_instr(unsigned int addr, unsigned int inst)
             imm = mask & inst;
             imm = imm >> 20;
 
-	    if(debug_en){
+			if(debug_en){
             //printf("rs1 = %u, shamt = %u, rd = %u", rs1, shamt, rd);
             printf("funct3 = %u\n", funct3);
             //printf("funct7 = %u\n", funct7);
             printf("imm = %u\n", imm);
-	    }
+			}
 
             if(funct3 == 0)
             {
                 printf("Calling JALR function");
-		JALR(rd, rs1, imm);
-                pc_flag = 1;
             } else
             {
                 printf("Invalid instruction");
-		exit(0);
             }
                 break;
 
@@ -1219,13 +976,11 @@ void decode_instr(unsigned int addr, unsigned int inst)
             im1 = imm >> 19; //20th bit
             im2 = (im1<<19) | ((imm & 255)<<11) | ((imm & 256)<<3) | ((imm & 523776)>>8);
             imm = im2<<1;
-       	    if(debug_en){
+			if(debug_en){
             printf("imm = %u\n", imm);
-	    }
+			}
 
             printf("Calling JAL instruction");
-	    JAL(rd, imm);
-            pc_flag = 1;
             break;
 
         case 23: //OPCODE == 0010111
@@ -1237,12 +992,11 @@ void decode_instr(unsigned int addr, unsigned int inst)
             mask = 4294963200; //32'b11111111111111111111000000000000--> checking imm
             imm = mask & inst;
             imm = imm >> 12;
-	    if(debug_en){
+			if(debug_en){
             printf("imm = %u\n", imm);
-	    }
+			}
 
             printf("Calling AUIPC instruction");
-	    AUIPC(rd, imm, pc);
             break;
 
         case 55: //OPCODE == 0110111
@@ -1254,12 +1008,11 @@ void decode_instr(unsigned int addr, unsigned int inst)
             mask = 4294963200; //32'b11111111111111111111000000000000--> checking imm
             imm = mask & inst;
             imm = imm >> 12;
-	    if(debug_en){
+			if(debug_en){
             printf("imm = %u\n", imm);
-	    }
+			}
 
             printf("Calling LUI instruction");
-	    LUI(rd, imm);
             break;
 
 
