@@ -170,6 +170,225 @@ void two_params(char first_param[100],char sec_param[100]){
                         }
 }
 
+void LB(int rd,int rs1, int imm){
+    int imm_new = imm>>11;
+    //int mask=4294963200;
+    //int regmask=4294967040;
+    unsigned int location =0;
+    if (imm_new)
+    {
+		unsigned int up=0xFFF;
+        imm=up-imm+1;//2's complement
+		imm = -imm;  
+		//imm = mask | imm;
+    }
+	location = gpr_arr[rs1]+imm;
+    
+    int forsignEinReg = mem_arr[location];
+    int negorpos = forsignEinReg >> 7;
+    
+    if(negorpos)
+    {
+		unsigned int up1=0xFF;
+        forsignEinReg=up1-forsignEinReg+1;//2's complement
+		forsignEinReg = -forsignEinReg;
+        //forsignEinReg = regmask | forsignEinReg;
+        gpr_arr[rd] = forsignEinReg;
+    }
+    else
+    {
+        gpr_arr[rd] = mem_arr[location];
+    }
+}
+
+void LH(int rd,int rs1, int imm){
+    int imm_new = imm>>11;
+    //int mask=4294963200;
+    //int regmask=4294901760;
+    unsigned int location =0;
+    if (imm_new)
+    {
+		unsigned int up=0xFFF;
+        imm=up-imm+1;//2's complement
+		imm = -imm; 
+        //imm = mask | imm;
+    }
+	location = gpr_arr[rs1]+imm;
+	
+    if(location % 2 ==0)
+    {
+		int lsb = mem_arr[location];
+		int msb = mem_arr[location+1];
+		msb = msb<<8;
+		int forsignEinReg = msb +lsb;
+		int negorpos = forsignEinReg >> 15;
+    
+		if(negorpos)
+		{
+			unsigned int up1=0xFF;
+			forsignEinReg=up1-forsignEinReg+1;//2's complement
+			forsignEinReg = -forsignEinReg;
+			//forsignEinReg = regmask | forsignEinReg;
+		}
+        gpr_arr[rd] = forsignEinReg;    
+	}
+	else
+	{
+		printf("\n lh failed as the memory array location is not aligned");
+	}
+}
+
+void LW(int rd,int rs1, int imm){
+    int imm_new = imm>>11;
+    //int mask=4294963200;
+    unsigned int location =0;
+    if (imm_new)
+    {
+		unsigned int up=0xFFF;
+        imm=up-imm+1;//2's complement
+		imm = -imm; 
+        //imm = mask | imm;
+    }
+        location = gpr_arr[rs1]+imm;
+		
+    if(location % 4 ==0)
+    {
+		int one = mem_arr[location];
+		int two = mem_arr[location+1];
+		two = two<<8;
+		int three = mem_arr[location+2];
+		three = three<16;
+		int four = mem_arr[location+3];
+		four = four<<24;
+		int forsignEinReg = one+two+three+four;
+		
+		gpr_arr[rd] = forsignEinReg;
+	}
+	else
+	{
+		printf("\n lw failed as the memory array location is not aligned");
+	}
+}
+
+void LBU(int rd,int rs1, int imm){
+    int imm_new = imm>>11;
+    //int mask=4294963200;
+    unsigned int location =0;
+	if (imm_new)
+    {
+		unsigned int up=0xFFF;
+        imm=up-imm+1;//2's complement
+		imm = -imm; 
+        //imm = mask | imm;
+	}
+    location = gpr_arr[rs1]+imm;
+    gpr_arr[rd] = mem_arr[location];
+}
+
+void LHU(int rd,int rs1, int imm){
+    int imm_new = imm>>11;
+    //int mask=4294963200;
+    unsigned int location =0;
+	if (imm_new)
+    {
+		unsigned int up=0xFFF;
+        imm=up-imm+1;//2's complement
+		imm = -imm; 
+        //imm = mask | imm;
+	}
+
+    location = gpr_arr[rs1]+imm;
+    if(location % 2 ==0)
+    {
+		int lsb = mem_arr[location];
+		int msb = mem_arr[location+1];
+		msb = msb<<8;
+		int forsignEinReg = msb +lsb;
+	
+		gpr_arr[rd] = forsignEinReg;
+	}
+	else
+	{
+		printf("\n lb failed as the memory array location is not aligned");
+	}
+}
+
+void SB(int rd,int rs1,int rs2, int imm){
+    int imm_new = imm>>11;
+    //int mask=4294963200;
+    //int regmask=4294967040;
+    unsigned int location =0;
+    if (imm_new)
+    {
+		unsigned int up=0xFFF;
+        imm=up-imm+1;//2's complement
+		imm = -imm; 
+        //imm = mask | imm;
+    }
+        location = gpr_arr[rs1]+imm;
+
+    mem_arr[location] = gpr_arr[rs2];
+}
+
+void AUIPC(int rd,int imm, int addrofaupic){
+int imm_new;
+imm_new = imm<<12;
+gpr_arr[rd] = imm_new+addrofaupic;
+}
+
+void SH(int rd,int rs1,int rs2, int imm){
+    int imm_new = imm>>11;
+    //int mask=4294963200;
+    unsigned int location =0;
+    if (imm_new)
+    {
+		unsigned int up=0xFFF;
+        imm=up-imm+1;//2's complement
+		imm = -imm; 
+        //imm = mask | imm;
+    }
+        location = gpr_arr[rs1]+imm;
+    
+    if(location %2 ==0)
+    {
+    mem_arr[location] = gpr_arr[rs2];
+    mem_arr[location+1] = gpr_arr[rs2]>>8;
+    }
+    else
+    {
+        printf("\n The memory location is not aligned");
+    }
+}
+
+void SW(int rd,int rs1,int rs2, int imm){
+    int imm_new = imm>>11;
+    //int mask=4294963200;
+    unsigned int location =0;
+    if (imm_new)
+    {
+		unsigned int up=0xFFF;
+        imm=up-imm+1;//2's complement
+		imm = -imm; 
+		//imm = mask | imm;
+    }
+        location = gpr_arr[rs1]+imm;
+    
+    if(location %4 ==0)
+    {
+    mem_arr[location] = gpr_arr[rs2];
+    mem_arr[location+1] = gpr_arr[rs2]>>8;
+    mem_arr[location+2] = gpr_arr[rs2]>>16;
+    mem_arr[location+3] = gpr_arr[rs2]>>24;
+    }
+    else
+    {
+        printf("\n The memory location is not aligned");
+    }
+}
+
+void LUI(int rd,int imm){
+gpr_arr[rd] = imm<<12;
+}
 
 void BEQ(int imm,int rs1,int rs2){
         if(gpr_arr[rs1] == gpr_arr[rs2]){
