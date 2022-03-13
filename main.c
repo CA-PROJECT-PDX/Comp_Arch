@@ -295,20 +295,27 @@ gpr_arr[rd]=gpr_arr[rs1] >> gpr_arr[rs2];
 //printf("\n contents in gpr are rd=%x,rs2=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
 }
 
+/*int UPPER(int imm,unsigned int up ){
+int mask
+}*/
 
 void ADDI(int rd,int rs1,int imm){
 //printf("\nimm val=%d",imm);
 int imm_msb,imm_new,mask;
 imm_msb = imm>>11;
         if( imm_msb == 1 ) {
-        mask=4294963200;
-        imm_new=mask | imm;
+        //mask=4294963200;
+	unsigned int up=0xFFF;
+        imm_new=up-imm+1;//2's complement
+	//imm_new=mask | imm;
+	gpr_arr[rd]=gpr_arr[rs1]-imm_new;
         }
         else {
         imm_new=imm;
+	gpr_arr[rd]=gpr_arr[rs1]+imm_new;
         }
         //printf("\n contents in gpr are rd=%d,rs1=%d",gpr_arr[rd],gpr_arr[rs1]);
-        gpr_arr[rd]=gpr_arr[rs1]+imm_new;
+        //gpr_arr[rd]=gpr_arr[rs1]+imm_new;
 
 //printf("\n new contents in gpr are rd=%d,rs1=%d,imm=%d",gpr_arr[rd],gpr_arr[rs1],imm_new);
 }
@@ -1029,38 +1036,22 @@ void display_pc_inst(unsigned int inst)
 
 void display_regs()
 {
-	printf("\n x0  		X[0]  = %X", gpr_arr[0]);
-	printf("\n ra  		X[1]  = %X", gpr_arr[1]);
-	printf("\n sp  		X[2]  = %X", gpr_arr[2]);
-	printf("\n gp  		X[3]  = %X", gpr_arr[3]);
-	printf("\n tp  		X[4]  = %X", gpr_arr[4]);
-	printf("\n t0  		X[5]  = %X", gpr_arr[5]);
-	printf("\n t1  		X[6]  = %X", gpr_arr[6]);
-	printf("\n t2  		X[7]  = %X", gpr_arr[7]);
-	printf("\n s0/fp  	X[8]  = %X", gpr_arr[8]);
-	printf("\n s1  		X[9]  = %X", gpr_arr[9]);
-	printf("\n a0  		X[10] = %X", gpr_arr[10]);
-	printf("\n a1  		X[11] = %X", gpr_arr[11]);
-	printf("\n a2  		X[12] = %X", gpr_arr[12]);
-	printf("\n a3  		X[13] = %X", gpr_arr[13]);
-	printf("\n a4  		X[14] = %X", gpr_arr[14]);
-	printf("\n a5  		X[15] = %X", gpr_arr[15]);
-	printf("\n a6  		X[16] = %X", gpr_arr[16]);
-	printf("\n a7  		X[17] = %X", gpr_arr[17]);
-	printf("\n s2  		X[18] = %X", gpr_arr[18]);
-	printf("\n s3  		X[19] = %X", gpr_arr[19]);
-	printf("\n s4  		X[20] = %X", gpr_arr[20]);
-	printf("\n s5  		X[21] = %X", gpr_arr[21]);
-	printf("\n s6  		X[22] = %X", gpr_arr[22]);
-	printf("\n s7  		X[23] = %X", gpr_arr[23]);
-	printf("\n s8  		X[24] = %X", gpr_arr[24]);
-	printf("\n s9  		X[25] = %X", gpr_arr[25]);
-	printf("\n s10     	X[26] = %X", gpr_arr[26]);
-	printf("\n s11    	X[27] = %X", gpr_arr[27]);
-	printf("\n t3  		X[28] = %X", gpr_arr[28]);
-	printf("\n t4  		X[29] = %X", gpr_arr[29]);
-	printf("\n t5  		X[30] = %X", gpr_arr[30]);
-	printf("\n t6  		X[31] = %X", gpr_arr[31]);
+	printf("\n x0  -->	X[0]  = %X", gpr_arr[0]);  printf("		|	 a6  -->	X[16] = %X", gpr_arr[16]);
+	printf("\n ra  -->	X[1]  = %X", gpr_arr[1]);  printf("		|	 a7  -->	X[17] = %X", gpr_arr[17]);
+	printf("\n sp  -->	X[2]  = %X", gpr_arr[2]);  printf("		|	 s2  -->	X[18] = %X", gpr_arr[18]);
+	printf("\n gp  -->	X[3]  = %X", gpr_arr[3]);  printf("		|	 s3  -->	X[19] = %X", gpr_arr[19]);
+	printf("\n tp  -->	X[4]  = %X", gpr_arr[4]);  printf("		|	 s4  -->	X[20] = %X", gpr_arr[20]);
+	printf("\n t0  -->	X[5]  = %X", gpr_arr[5]);  printf("		|	 s5  -->	X[21] = %X", gpr_arr[21]);
+	printf("\n t1  -->	X[6]  = %X", gpr_arr[6]);  printf("		|	 s6  -->	X[22] = %X", gpr_arr[22]);
+	printf("\n t2  -->	X[7]  = %X", gpr_arr[7]);  printf("		|	 s7  -->	X[23] = %X", gpr_arr[23]);
+	printf("\n s0  -->   	X[8]  = %X", gpr_arr[8]);  printf("		|	 s8  -->	X[24] = %X", gpr_arr[24]);
+	printf("\n s1  -->	X[9]  = %X", gpr_arr[9]);  printf("		|	 s9  -->	X[25] = %X", gpr_arr[25]);
+	printf("\n a0  -->	X[10] = %X", gpr_arr[10]); printf("		|	 s10 -->    	X[26] = %X", gpr_arr[26]);
+	printf("\n a1  -->	X[11] = %X", gpr_arr[11]); printf("		|	 s11 -->   	X[27] = %X", gpr_arr[27]);
+	printf("\n a2  -->	X[12] = %X", gpr_arr[12]); printf("		|	 t3  -->	X[28] = %X", gpr_arr[28]);
+	printf("\n a3  -->	X[13] = %X", gpr_arr[13]); printf("		|	 t4  -->	X[29] = %X", gpr_arr[29]);
+	printf("\n a4  -->	X[14] = %X", gpr_arr[14]); printf("		|	 t5  -->	X[30] = %X", gpr_arr[30]);
+	printf("\n a5  -->	X[15] = %X", gpr_arr[15]); printf("		|	 t6  -->	X[31] = %X", gpr_arr[31]);
 }
 
 int main(int argc, char *argv[])
