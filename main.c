@@ -1543,7 +1543,7 @@ int main(int argc, char *argv[])
 							if(print_en)display_pc_inst(inst_dec[i]);
                             decode_instr(addr_dec[i], inst_dec[i]);
 							if(print_en)display_regs();
-                            printf("\n-------------------------------------------------------------------------------\n");
+                            //printf("\n-------------------------------------------------------------------------------\n");
 							if(step_ip && print_en){
 								printf("\n Continue to next instruction or print all (1/0)?");
 								scanf("%d", &step_ip);
