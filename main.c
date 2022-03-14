@@ -4,10 +4,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdint.h>
-//#include <functions.h>
 
-int gpr_arr[32];
-int8_t mem_arr[65536];
+int GPR[32];
+int8_t MEM[65536];
 unsigned int pc;
 char* params_final[3];
 int debug_en = 1; //For debugging
@@ -46,15 +45,12 @@ void params(char first_param[1000],char sec_param[1000],char third_param[1000]){
             stk_addr[i]=third_param[i];
 
         char* fname1=fname+8;
-        //printf("fname1=%s\n",fname1);
                 params_final[1]=fname1;
 
         char* strt_addr1=strt_addr+11;
-        //printf("strt_addr1=%s\n",strt_addr1);
                 params_final[2]=strt_addr1;
 
         char* stk_addr1=stk_addr+11;
-        //printf("stk_addr1=%s\n",stk_addr1);
                 params_final[3]=stk_addr1;
 
 }
@@ -74,7 +70,7 @@ void one_params(char first_param[1000]){
         else if(strstr(first_param,"start_addr=")){
                 for(int i=0;i<100;i++)
                                 strt_addr[i]=first_param[i];
-                        char* fname1="tracefile.txt";
+                        char* fname1="program.mem";
                         char* stk_addr1="65535";
                         char* strt_addr1=strt_addr+11;
                         params_final[1]=fname1;
@@ -84,7 +80,7 @@ void one_params(char first_param[1000]){
         else if(strstr(first_param,"stack_addr=")){
                 for(int i=0;i<100;i++)
                                 stk_addr[i]=first_param[i];
-                        char* fname1="tracefile.txt";
+                        char* fname1="program.mem";
                         char* strt_addr1="0";
                         char* stk_addr1=stk_addr+11;
                         params_final[1]=fname1;
@@ -136,7 +132,7 @@ void two_params(char first_param[1000],char sec_param[1000]){
             else if(strstr(sec_param,"stack_addr=")){
                 for(int i=0;i<100;i++)
                 stk_addr[i]=sec_param[i];
-                                char* fname1="tracefile.txt";
+                                char* fname1="program.mem";
                                 char* strt_addr1=strt_addr+11;
                                 char* stk_addr1=stk_addr+11;
                                 params_final[1]=fname1;
@@ -160,7 +156,7 @@ void two_params(char first_param[1000],char sec_param[1000]){
             else if(strstr(sec_param,"start_addr=")){
                 for(int i=0;i<100;i++)
                 strt_addr[i]=sec_param[i];
-                                char* fname1="tracefile.txt";
+                                char* fname1="program.mem";
                                 char* stk_addr1=stk_addr+11;
                                 char* strt_addr1=strt_addr+11;
                                 params_final[1]=fname1;
@@ -172,19 +168,16 @@ void two_params(char first_param[1000],char sec_param[1000]){
 
 void LB(int rd,int rs1, int imm){
     int imm_new = imm>>11;
-    //int mask=4294963200;
-    //int regmask=4294967040;
     unsigned int location =0;
     if (imm_new)
     {
 		unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
 		imm = -imm;  
-		//imm = mask | imm;
     }
-	location = gpr_arr[rs1]+imm;
+	location = GPR[rs1]+imm;
     
-    int forsignEinReg = mem_arr[location];
+    int forsignEinReg = MEM[location];
     int negorpos = forsignEinReg >> 7;
     
     if(negorpos)
@@ -192,33 +185,29 @@ void LB(int rd,int rs1, int imm){
 		unsigned int up1=0xFF;
         forsignEinReg=up1-forsignEinReg+1;//2's complement
 		forsignEinReg = -forsignEinReg;
-        //forsignEinReg = regmask | forsignEinReg;
-        gpr_arr[rd] = forsignEinReg;
+        GPR[rd] = forsignEinReg;
     }
     else
     {
-        gpr_arr[rd] = mem_arr[location];
+        GPR[rd] = MEM[location];
     }
 }
 
 void LH(int rd,int rs1, int imm){
     int imm_new = imm>>11;
-    //int mask=4294963200;
-    //int regmask=4294901760;
     unsigned int location =0;
     if (imm_new)
     {
 		unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
 		imm = -imm; 
-        //imm = mask | imm;
     }
-	location = gpr_arr[rs1]+imm;
+	location = GPR[rs1]+imm;
 	
     if(location % 2 ==0)
     {
-		int lsb = mem_arr[location];
-		int msb = mem_arr[location+1];
+		int lsb = MEM[location];
+		int msb = MEM[location+1];
 		msb = msb<<8;
 		int forsignEinReg = msb +lsb;
 		int negorpos = forsignEinReg >> 15;
@@ -228,170 +217,161 @@ void LH(int rd,int rs1, int imm){
 			unsigned int up1=0xFF;
 			forsignEinReg=up1-forsignEinReg+1;//2's complement
 			forsignEinReg = -forsignEinReg;
-			//forsignEinReg = regmask | forsignEinReg;
 		}
-        gpr_arr[rd] = forsignEinReg;    
+        GPR[rd] = forsignEinReg;    
 	}
 	else
 	{
-		printf("\n lh failed as the memory array location is not aligned");
+		printf("\n ERROR: lh failed as the memory array location is not aligned");
+		exit(0);
 	}
 }
 
 void LW(int rd,int rs1, int imm){
     int imm_new = imm>>11;
-    //int mask=4294963200;
     unsigned int location =0;
     if (imm_new)
     {
 		unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
 		imm = -imm; 
-        //imm = mask | imm;
     }
-        location = gpr_arr[rs1]+imm;
+        location = GPR[rs1]+imm;
 		
     if(location % 4 ==0)
     {
-		int one = mem_arr[location];
-		int two = mem_arr[location+1];
+		int one = MEM[location];
+		int two = MEM[location+1];
 		two = two<<8;
-		int three = mem_arr[location+2];
+		int three = MEM[location+2];
 		three = three<16;
-		int four = mem_arr[location+3];
+		int four = MEM[location+3];
 		four = four<<24;
 		int forsignEinReg = one+two+three+four;
 		
-		gpr_arr[rd] = forsignEinReg;
+		GPR[rd] = forsignEinReg;
 	}
 	else
 	{
-		printf("\n lw failed as the memory array location is not aligned");
+		printf("\n ERROR: lw failed as the memory array location is not aligned");
+		exit(0);
 	}
 }
 
 void LBU(int rd,int rs1, int imm){
     int imm_new = imm>>11;
-    //int mask=4294963200;
     unsigned int location =0;
 	if (imm_new)
     {
 		unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
 		imm = -imm; 
-        //imm = mask | imm;
 	}
-    location = gpr_arr[rs1]+imm;
-    gpr_arr[rd] = mem_arr[location];
+    location = GPR[rs1]+imm;
+    GPR[rd] = MEM[location];
 }
 
 void LHU(int rd,int rs1, int imm){
     int imm_new = imm>>11;
-    //int mask=4294963200;
     unsigned int location =0;
 	if (imm_new)
     {
 		unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
 		imm = -imm; 
-        //imm = mask | imm;
 	}
 
-    location = gpr_arr[rs1]+imm;
+    location = GPR[rs1]+imm;
     if(location % 2 ==0)
     {
-		int lsb = mem_arr[location];
-		int msb = mem_arr[location+1];
+		int lsb = MEM[location];
+		int msb = MEM[location+1];
 		msb = msb<<8;
 		int forsignEinReg = msb +lsb;
 	
-		gpr_arr[rd] = forsignEinReg;
+		GPR[rd] = forsignEinReg;
 	}
 	else
 	{
-		printf("\n lb failed as the memory array location is not aligned");
+		printf("\n ERROR: lb failed as the memory array location is not aligned");
+		exit(0);
 	}
 }
 
 void SB(int rs1,int rs2, int imm){
     int imm_new = imm>>11;
-    //int mask=4294963200;
-    //int regmask=4294967040;
     unsigned int location =0;
     if (imm_new)
     {
 		unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
 		imm = -imm; 
-        //imm = mask | imm;
     }
-        location = gpr_arr[rs1]+imm;
+        location = GPR[rs1]+imm;
 
-    mem_arr[location] = gpr_arr[rs2];
+    MEM[location] = GPR[rs2];
 }
 
 void AUIPC(int rd,int imm, int pc1){
 int imm_new;
 imm_new = imm<<12;
-gpr_arr[rd] = imm_new+pc1;
+GPR[rd] = imm_new+pc1;
 }
 
 void SH(int rs1,int rs2, int imm){
     int imm_new = imm>>11;
-    //int mask=4294963200;
     unsigned int location =0;
     if (imm_new)
     {
 		unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
 		imm = -imm; 
-        //imm = mask | imm;
     }
-        location = gpr_arr[rs1]+imm;
+        location = GPR[rs1]+imm;
     
     if(location %2 ==0)
     {
-    mem_arr[location] = gpr_arr[rs2];
-    mem_arr[location+1] = gpr_arr[rs2]>>8;
+    MEM[location] = GPR[rs2];
+    MEM[location+1] = GPR[rs2]>>8;
     }
     else
     {
-        printf("\n The memory location is not aligned");
+        printf("\n ERROR: SH memory location is not aligned");
+		exit(0);
     }
 }
 
 void SW(int rs1,int rs2, int imm){
     int imm_new = imm>>11;
-    //int mask=4294963200;
     unsigned int location =0;
     if (imm_new)
     {
 		unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
 		imm = -imm; 
-		//imm = mask | imm;
     }
-        location = gpr_arr[rs1]+imm;
+        location = GPR[rs1]+imm;
     
     if(location %4 ==0)
     {
-    mem_arr[location] = gpr_arr[rs2];
-    mem_arr[location+1] = gpr_arr[rs2]>>8;
-    mem_arr[location+2] = gpr_arr[rs2]>>16;
-    mem_arr[location+3] = gpr_arr[rs2]>>24;
+    MEM[location] = GPR[rs2];
+    MEM[location+1] = GPR[rs2]>>8;
+    MEM[location+2] = GPR[rs2]>>16;
+    MEM[location+3] = GPR[rs2]>>24;
     }
     else
     {
-        printf("\n The memory location is not aligned");
+        printf("\n ERROR: SW memory location is not aligned");
+		exit(0);
     }
 }
 
 void LUI(int rd,int imm){
-gpr_arr[rd] = imm<<12;
+GPR[rd] = imm<<12;
 }
 
 void BEQ(int imm,int rs1,int rs2){
-        if(gpr_arr[rs1] == gpr_arr[rs2]){
+        if(GPR[rs1] == GPR[rs2]){
                 if(imm>>12 == 0) pc += (imm & 4095);
                 else pc -= (imm & 4095);
         }
@@ -400,7 +380,7 @@ void BEQ(int imm,int rs1,int rs2){
 }
 
 void BNE(int imm,int rs1,int rs2){
-        if(gpr_arr[rs1] != gpr_arr[rs2]){
+        if(GPR[rs1] != GPR[rs2]){
                 if(imm>>12 == 0) pc += (imm & 4095);
                 else pc -= (imm & 4095);
         }
@@ -409,7 +389,7 @@ void BNE(int imm,int rs1,int rs2){
 }
 
 void BLT(int imm,int rs1,int rs2){
-    if(gpr_arr[rs1] < gpr_arr[rs2]){
+    if(GPR[rs1] < GPR[rs2]){
         if(imm>>12 == 0) pc += (imm & 4095);
         else pc -= (imm & 4095);
     }
@@ -418,7 +398,7 @@ void BLT(int imm,int rs1,int rs2){
 }
 
 void BGE(int imm,int rs1,int rs2){
-    if(gpr_arr[rs1] >= gpr_arr[rs2]){
+    if(GPR[rs1] >= GPR[rs2]){
         if(imm>>12 == 0) pc += (imm & 4095);
         else pc -= (imm & 4095);
     }
@@ -427,7 +407,7 @@ void BGE(int imm,int rs1,int rs2){
 }
 
 void BLTU(int imm,int rs1,int rs2){
-    if((unsigned int)gpr_arr[rs1] < (unsigned int)gpr_arr[rs2]){
+    if((unsigned int)GPR[rs1] < (unsigned int)GPR[rs2]){
         if(imm>>12 == 0) pc += (imm & 4095);
         else pc -= (imm & 4095); 
     }
@@ -436,7 +416,7 @@ void BLTU(int imm,int rs1,int rs2){
 }
 
 void BGEU(int imm,int rs1,int rs2){
-    if((unsigned int)gpr_arr[rs1] >= (unsigned int)gpr_arr[rs2]){
+    if((unsigned int)GPR[rs1] >= (unsigned int)GPR[rs2]){
         if(imm>>12 == 0) pc += (imm & 4095);
         else pc -= (imm & 4095);
     }
@@ -445,128 +425,90 @@ void BGEU(int imm,int rs1,int rs2){
 }
 
 void JAL(int rd,int imm){
-    gpr_arr[rd] = pc + 4;
+    GPR[rd] = pc + 4;
 	if(imm>>20 == 0) pc += (imm & 1048575);
 	else pc -= (imm & 1048575);
  }
  
 void JALR(int rd, int rs1, int imm){
-    gpr_arr[rd] = pc + 4;
-	if(imm>>11 == 0) pc = gpr_arr[rs1] + (imm & 4095);
-	else pc = gpr_arr[rs1] - (imm & 4095);
+    GPR[rd] = pc + 4;
+	if(imm>>11 == 0) pc = GPR[rs1] + (imm & 4095);
+	else pc = GPR[rs1] - (imm & 4095);
  }
 
 void ADD(int rd,int rs1,int rs2){
-//printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
-gpr_arr[rd]=gpr_arr[rs1]+gpr_arr[rs2];
-//printf("\n new contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
+GPR[rd]=GPR[rs1]+GPR[rs2];
 }
 void SUB(int rd,int rs1,int rs2){
-//printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
-gpr_arr[rd]= gpr_arr[rs1] - gpr_arr[rs2];
-//printf("\n new contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
+GPR[rd]= GPR[rs1] - GPR[rs2];
 }
 
 void SLT(int rd,int rs1,int rs2){
-//printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
-if ((gpr_arr[rs1]) < (gpr_arr[rs2]))
-	gpr_arr[rd]= 1;
+if ((GPR[rs1]) < (GPR[rs2]))
+	GPR[rd]= 1;
 else
-	gpr_arr[rd]= 0;
-//printf("\n new contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
+	GPR[rd]= 0;
 }
 
 void SLTU(int rd,int rs1,int rs2){
-if((unsigned int)gpr_arr[rs1] < (unsigned int)gpr_arr[rs2]) gpr_arr[rd] = 1;
-else gpr_arr[rd] = 0;
+if((unsigned int)GPR[rs1] < (unsigned int)GPR[rs2]) GPR[rd] = 1;
+else GPR[rd] = 0;
 }
 
 void AND(int rd,int rs1,int rs2){
-//printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
-gpr_arr[rd]=gpr_arr[rs1] & gpr_arr[rs2];
-//printf("\n contents in gpr are rd=%x,rs2=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
+GPR[rd]=GPR[rs1] & GPR[rs2];
 }
 
 void OR(int rd,int rs1,int rs2){
-//printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
-gpr_arr[rd]=gpr_arr[rs1] | gpr_arr[rs2];
-//printf("\n contents in gpr are rd=%x,rs2=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
+GPR[rd]=GPR[rs1] | GPR[rs2];
 }
 
 void XOR(int rd,int rs1,int rs2){
-//printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
-gpr_arr[rd]=gpr_arr[rs1] ^ gpr_arr[rs2];
-//printf("\n contents in gpr are rd=%x,rs2=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
+GPR[rd]=GPR[rs1] ^ GPR[rs2];
 }
 
 void SLL(int rd,int rs1,int rs2){
-//printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
-gpr_arr[rd]=gpr_arr[rs1] << gpr_arr[rs2];
-//printf("\n contents in gpr are rd=%x,rs2=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
+	int mask,shft_amt;
+	mask=31;
+	shft_amt=mask & GPR[rs2];
+	GPR[rd]=GPR[rs1] << shft_amt;
 }
 
 void SRL(int rd,int rs1,int rs2){
-int mask,shft_amt;
-unsigned int u_rs1;
-mask=31;
-u_rs1=gpr_arr[rs1];
-shft_amt=mask & gpr_arr[rs2];
-gpr_arr[rd]=u_rs1 >> shft_amt;
+	int mask,shft_amt;
+	unsigned int u_rs1;
+	mask=31;
+	u_rs1=GPR[rs1];
+	shft_amt=mask & GPR[rs2];
+	GPR[rd]=u_rs1 >> shft_amt;
 }
 
 void SRA(int rd,int rs1,int rs2){
-
-	//int rs2_msb;
-	unsigned int shift_val;
-	unsigned int temp;
-	//rs2_msb = rs2>>31;
-    //if( rs2_msb == 1 ) {
-	//	unsigned int up=0xFFFFFFFF;
-	//	shift_val = up - gpr_arr[rs2] + 1;
-	//	temp = (unsigned int)gpr_arr[rs1];
-	//	gpr_arr[rd] = temp >> shift_val;
-	//}
-	//else
-	//{
-		shift_val = (unsigned int)gpr_arr[rs2];
-		gpr_arr[rd] = gpr_arr[rs1] >> shift_val;
-	//}
-
-//gpr_arr[rd]=gpr_arr[rs1] >> gpr_arr[rs2];
+	int mask,shft_amt;
+	mask=31;
+	shft_amt=mask & GPR[rs2];
+	GPR[rd] = GPR[rs1] >> shft_amt;
 
 }
 
-/*int UPPER(int imm,unsigned int up ){
-int mask
-}*/
-
 void ADDI(int rd,int rs1,int imm){
-//printf("\nimm val=%d",imm);
 int imm_msb,imm_new,mask;
 imm_msb = imm>>11;
         if( imm_msb == 1 ) {
-        //mask=4294963200;
 	unsigned int up=0xFFF;
         imm_new=up-imm+1;//2's complement
 	imm_new=-imm_new;
-	//imm_new=mask | imm;
         }
         else {
         imm_new=imm;
         }
-        //printf("\n contents in gpr are rd=%d,rs1=%d",gpr_arr[rd],gpr_arr[rs1]);
-        gpr_arr[rd]=gpr_arr[rs1]+imm_new;
-
-//printf("\n new contents in gpr are rd=%d,rs1=%d,imm=%d",gpr_arr[rd],gpr_arr[rs1],imm_new);
+        GPR[rd]=GPR[rs1]+imm_new;
 }
 
 void SLTI(int rd,int rs1,int imm){
-//printf("\nimm val=%d",imm);
 int imm_msb,imm_new,mask;
 imm_msb = imm>>11;
         if( imm_msb == 1 ) {
-        //mask=4294963200;
-        //imm_new=mask | imm;
 	unsigned int up=0xFFF;
         imm_new=up-imm+1;//2's complement
         imm_new=-imm_new;
@@ -574,50 +516,36 @@ imm_msb = imm>>11;
         else {
         imm_new=imm;
         }
-        //printf("\n contents in gpr are rd=%x,rs1=%d",gpr_arr[rd],gpr_arr[rs1]);
-        if ((gpr_arr[rs1]) < (imm_new))
-			gpr_arr[rd]= 1;
+        if ((GPR[rs1]) < (imm_new))
+			GPR[rd]= 1;
 		else
-			gpr_arr[rd]= 0;
-//printf("\n new contents in gpr are rd=%x,rs1=%x,imm=%d",gpr_arr[rd],gpr_arr[rs1],imm_new);
+			GPR[rd]= 0;
 }
 void SLTIU(int rd,int rs1,int imm){
-//printf("\nimm val=%d",imm);
-
-        //printf("\n contents in gpr are rd=%x,rs1=%d",gpr_arr[rd],gpr_arr[rs1]);
-        if ((gpr_arr[rs1]) < (imm))
-			gpr_arr[rd]= 1;
+        if ((GPR[rs1]) < (imm))
+			GPR[rd]= 1;
 		else
-			gpr_arr[rd]= 0;
-//printf("\n new contents in gpr are rd=%x,rs1=%x,imm=%d",gpr_arr[rd],gpr_arr[rs1],imm);
+			GPR[rd]= 0;
 }
 void ANDI(int rd,int rs1,int imm){
-//printf("\nimm val=%d",imm);
 int imm_msb,imm_new,mask;
 imm_msb = imm>>11;
         if( imm_msb == 1 ) {
-        //mask=4294963200;
-        //imm_new=mask | imm;
-	unsigned int up=0xFFF;
+		unsigned int up=0xFFF;
         imm_new=up-imm+1;//2's complement
         imm_new=-imm_new;
         }
         else {
         imm_new=imm;
         }
-        //printf("\n contents in gpr are rd=%x,rs1=%d",gpr_arr[rd],gpr_arr[rs1]);
 		
-        gpr_arr[rd]=gpr_arr[rs1] & imm_new;
-//printf("\n new contents in gpr are rd=%x,rs1=%x,imm=%d",gpr_arr[rd],gpr_arr[rs1],imm_new);
+        GPR[rd]=GPR[rs1] & imm_new;
 }
 
 void ORI(int rd,int rs1,int imm){
-//printf("\nimm val=%d",imm);
 int imm_msb,imm_new,mask;
 imm_msb = imm>>11;
         if( imm_msb == 1 ) {
-        //mask=4294963200;
-        //imm_new=mask | imm;
 	unsigned int up=0xFFF;
         imm_new=up-imm+1;//2's complement
         imm_new=-imm_new;
@@ -625,19 +553,13 @@ imm_msb = imm>>11;
         else {
         imm_new=imm;
         }
-        //printf("\n contents in gpr are rd=%x,rs1=%d",gpr_arr[rd],gpr_arr[rs1]);
-		
-        gpr_arr[rd]=gpr_arr[rs1] | imm_new;
-//printf("\n new contents in gpr are rd=%x,rs1=%x,imm=%d",gpr_arr[rd],gpr_arr[rs1],imm_new);
+        GPR[rd]=GPR[rs1] | imm_new;
 }
 
 void XORI(int rd,int rs1,int imm){
-//printf("\nimm val=%d",imm);
 int imm_msb,imm_new,mask;
 imm_msb = imm>>11;
 if( imm_msb == 1 ) {
-    //mask=4294963200;
-    //imm_new=mask | imm;
     unsigned int up=0xFFF;
     imm_new=up-imm+1;//2's complement
     imm_new=-imm_new;
@@ -645,93 +567,74 @@ if( imm_msb == 1 ) {
 else {
     imm_new=imm;
     }
-//printf("\n contents in gpr are rd=%x,rs1=%d",gpr_arr[rd],gpr_arr[rs1]);
 		
-gpr_arr[rd]=gpr_arr[rs1] ^ imm_new;
+GPR[rd]=GPR[rs1] ^ imm_new;
 if (imm == -1){
-	gpr_arr[rd]= ~gpr_arr[rs1];	
+	GPR[rd]= ~GPR[rs1];	
 	}
-        
-//printf("\n new contents in gpr are rd=%x,rs1=%x,imm=%d",gpr_arr[rd],gpr_arr[rs1],imm_new);
 }
 void SLLI(int rd,int rs1,int shamt){
-//printf("\n contents in gpr are rd=%x,rs1=%x,shamt=%x",gpr_arr[rd],gpr_arr[rs1],shamt);
-gpr_arr[rd]=gpr_arr[rs1] << shamt;
-//printf("\n contents in gpr are rd=%x,rs1=%x,shamt=%x",gpr_arr[rd],gpr_arr[rs1],shamt);
+GPR[rd]=GPR[rs1] << shamt;
 }
 
 void SRLI(int rd,int rs1,int shamt){
-//printf("\n contents in gpr are rd=%x,rs1=%x,shamt=%x",gpr_arr[rd],gpr_arr[rs1],shamt);
-gpr_arr[rd]=gpr_arr[rs1] >> shamt;
-//printf("\n contents in gpr are rd=%x,rs1=%x,shamt=%x",gpr_arr[rd],gpr_arr[rs1],shamt);
+GPR[rd]=GPR[rs1] >> shamt;
 }
 
 void SRAI(int rd,int rs1, int shamt){
 unsigned int temp, shift_val;
-
-		printf("\nshamt = %X", shamt);
-
-		//shift_val = (unsigned int) shamt;
-		temp = (unsigned int)gpr_arr[rs1];
-		printf("\ntemp = %X, %u", temp, temp);
-		//gpr_arr[rd] = temp >> shamt;
-		gpr_arr[rd] = gpr_arr[rs1] >> shamt;
-
-//temp = (unsigned int) gpr_arr[rs1];
-//gpr_arr[rd] = temp >> shamt;
-
+		temp = (unsigned int)GPR[rs1];
+		GPR[rd] = GPR[rs1] >> shamt;
 }
 
 void MUL(int rd, int rs1, int rs2){
-	//int rs1_sign = rs1>>31;
-	//int rs2_sign = rs2>>31;
-	gpr_arr[rd] = gpr_arr[rs1] * gpr_arr[rs2];
+	GPR[rd] = GPR[rs1] * GPR[rs2];
 }
 
 void MULH(int rd, int rs1, int rs2){
 	unsigned long long int temp;
-	temp = gpr_arr[rs1] * gpr_arr[rs2];
-	gpr_arr[rd] = temp>>32;
+	temp = GPR[rs1] * GPR[rs2];
+	GPR[rd] = temp>>32;
 }
 
 void MULHU(int rd, int rs1, int rs2){
 	unsigned long long int temp;
-	temp = (unsigned int)gpr_arr[rs1] * (unsigned int)gpr_arr[rs2];
-	gpr_arr[rd] = temp>>32;
+	temp = (unsigned int)GPR[rs1] * (unsigned int)GPR[rs2];
+	GPR[rd] = temp>>32;
 }
 
 void MULHSU(int rd, int rs1, int rs2){
 	unsigned long long int temp;
-	temp = gpr_arr[rs1] * (unsigned int)gpr_arr[rs2];
-	gpr_arr[rd] = temp>>32;
+	temp = GPR[rs1] * (unsigned int)GPR[rs2];
+	GPR[rd] = temp>>32;
 }
 
 void DIV(int rd, int rs1, int rs2){
-	if(gpr_arr[rs2] !=0 )
-		gpr_arr[rd] = gpr_arr[rs1]/gpr_arr[rs2];
+	if(GPR[rs2] !=0 )
+		GPR[rd] = GPR[rs1]/GPR[rs2];
 	else
-		gpr_arr[rd] = 0xFFFFFFFF;
+		GPR[rd] = 0xFFFFFFFF;
 }
 
 void DIVU(int rd, int rs1, int rs2){
-	if(gpr_arr[rs2] !=0 )
-		gpr_arr[rd] = (unsigned int)gpr_arr[rs1] / (unsigned int) gpr_arr[rs2];
+	if(GPR[rs2] !=0 )
+		GPR[rd] = (unsigned int)GPR[rs1] / (unsigned int) GPR[rs2];
 	else
-		gpr_arr[rd] = 0xFFFFFFFF;
+		GPR[rd] = 0xFFFFFFFF;
 }
 
-void REM(int rd, int rs1, int rs2){ //TODO check for negative gpr_arr[rs1]
-	if(gpr_arr[rs2] !=0 )
-		gpr_arr[rd] = gpr_arr[rs1] % gpr_arr[rs2];
+void REM(int rd, int rs1, int rs2){ //TODO check for negative GPR[rs1]
+	if(GPR[rs2] !=0 )
+		GPR[rd] = GPR[rs1] % GPR[rs2];
 	else
-		gpr_arr[rd] = gpr_arr[rs1];
+		GPR[rd] = GPR[rs1];
 }
 
 void REMU(int rd, int rs1, int rs2){
-	if(gpr_arr[rs2] !=0)
-		gpr_arr[rd] = (unsigned int)gpr_arr[rs1] & (unsigned int) gpr_arr[rs2];
+	if(GPR[rs2] !=0)
+		GPR[rd] = (unsigned int)GPR[rs1] & (unsigned int) GPR[rs2];
 	else
-		gpr_arr[rd] = (unsigned int)gpr_arr[rs1];
+		GPR[rd] = (unsigned int)GPR[rs1];
 }
 
 unsigned int hextodec(char hexvalue[8], unsigned int decvalue){
@@ -824,7 +727,6 @@ int i=0;
                 }
                 i++;
         }
-        //printf("%s",binvalue);
                 return binvalue;
 }
 
@@ -868,14 +770,10 @@ void decode_instr(unsigned int addr, unsigned int inst)
         //mask = 127; //7'b111_1111 --> Checking opcode
 		mask = 0x7F;
         opcode = mask & inst;
-        //printf("\ninst = %u", inst);
-        //printf("\ninst = %u, mask = %u, opcode = %u", inst, mask, opcode);
         printf("\n");
 
         switch(opcode) {
             case 51 : //OPCODE == 0110011
-                //printf("R type instruction\n" );
-
             mask = 1015808; //    --> Checking rs1
             rs1 = mask & inst;
             rs1 = rs1>>15;
@@ -1091,7 +989,6 @@ void decode_instr(unsigned int addr, unsigned int inst)
                         printf("Calling SRAI function");
 			printf("\n FUNCTION NOT YET IMPLEMENTED"); //TODO
 			SRAI(rd, rs1, shamt);
-			//SRA(rd, rs1, shamt);
                     } else
                     {
                         printf("Invalid instruction");
@@ -1189,9 +1086,7 @@ void decode_instr(unsigned int addr, unsigned int inst)
             imm = imm >> 20;
 
 	    if(debug_en){
-            //printf("rs1 = %u, shamt = %u, rd = %u", rs1, shamt, rd);
             printf("funct3 = %u\n", funct3);
-            //printf("funct7 = %u\n", funct7);
             printf("imm = %u\n", imm);
 	    }
 
@@ -1253,9 +1148,6 @@ void decode_instr(unsigned int addr, unsigned int inst)
             im2 = imm2>>6; //12th bit
             im1 = imm1 & 1; //7th bit
             im3 = (im2 << 11) | (im1<<10) | ((imm2 & 63)<<4) | (imm1>>1);
-
-
-            //imm2 = imm2<<5;
             imm = im3<<1;
 
 	    if(debug_en){
@@ -1328,9 +1220,7 @@ void decode_instr(unsigned int addr, unsigned int inst)
             imm = imm >> 20;
 
 	    if(debug_en){
-            //printf("rs1 = %u, shamt = %u, rd = %u", rs1, shamt, rd);
             printf("funct3 = %u\n", funct3);
-            //printf("funct7 = %u\n", funct7);
             printf("imm = %u\n", imm);
 	    }
 
@@ -1409,10 +1299,8 @@ void decode_instr(unsigned int addr, unsigned int inst)
         }
     }
 	
-	if(gpr_arr[0] != 0){
-		//printf("ERROR: Trying to write into X0");
-		gpr_arr[0] = 0;
-		//exit(0);
+	if(GPR[0] != 0){
+		GPR[0] = 0;
 	}
 	
     if(pc_flag==0)
@@ -1435,22 +1323,38 @@ void display_pc_inst(unsigned int inst)
 
 void display_regs()
 {
-	printf("\n x0  -->	X[0]  = %X", gpr_arr[0]);  printf("		|	 a6  -->	X[16] = %X", gpr_arr[16]);
-	printf("\n ra  -->	X[1]  = %X", gpr_arr[1]);  printf("		|	 a7  -->	X[17] = %X", gpr_arr[17]);
-	printf("\n sp  -->	X[2]  = %X", gpr_arr[2]);  printf("		|	 s2  -->	X[18] = %X", gpr_arr[18]);
-	printf("\n gp  -->	X[3]  = %X", gpr_arr[3]);  printf("		|	 s3  -->	X[19] = %X", gpr_arr[19]);
-	printf("\n tp  -->	X[4]  = %X", gpr_arr[4]);  printf("		|	 s4  -->	X[20] = %X", gpr_arr[20]);
-	printf("\n t0  -->	X[5]  = %X", gpr_arr[5]);  printf("		|	 s5  -->	X[21] = %X", gpr_arr[21]);
-	printf("\n t1  -->	X[6]  = %X", gpr_arr[6]);  printf("		|	 s6  -->	X[22] = %X", gpr_arr[22]);
-	printf("\n t2  -->	X[7]  = %X", gpr_arr[7]);  printf("		|	 s7  -->	X[23] = %X", gpr_arr[23]);
-	printf("\n s0  -->   	X[8]  = %X", gpr_arr[8]);  printf("		|	 s8  -->	X[24] = %X", gpr_arr[24]);
-	printf("\n s1  -->	X[9]  = %X", gpr_arr[9]);  printf("		|	 s9  -->	X[25] = %X", gpr_arr[25]);
-	printf("\n a0  -->	X[10] = %X", gpr_arr[10]); printf("		|	 s10 -->    	X[26] = %X", gpr_arr[26]);
-	printf("\n a1  -->	X[11] = %X", gpr_arr[11]); printf("		|	 s11 -->   	X[27] = %X", gpr_arr[27]);
-	printf("\n a2  -->	X[12] = %X", gpr_arr[12]); printf("		|	 t3  -->	X[28] = %X", gpr_arr[28]);
-	printf("\n a3  -->	X[13] = %X", gpr_arr[13]); printf("		|	 t4  -->	X[29] = %X", gpr_arr[29]);
-	printf("\n a4  -->	X[14] = %X", gpr_arr[14]); printf("		|	 t5  -->	X[30] = %X", gpr_arr[30]);
-	printf("\n a5  -->	X[15] = %X", gpr_arr[15]); printf("		|	 t6  -->	X[31] = %X", gpr_arr[31]);
+	printf("\n x0  -->	X[0]  = %X", GPR[0]);  
+	printf("\n ra  -->	X[1]  = %X", GPR[1]);  
+	printf("\n sp  -->	X[2]  = %X", GPR[2]);  
+	printf("\n gp  -->	X[3]  = %X", GPR[3]);  
+	printf("\n tp  -->	X[4]  = %X", GPR[4]);  
+	printf("\n t0  -->	X[5]  = %X", GPR[5]);  
+	printf("\n t1  -->	X[6]  = %X", GPR[6]);  
+	printf("\n t2  -->	X[7]  = %X", GPR[7]);  
+	printf("\n s0  -->	X[8]  = %X", GPR[8]);  
+	printf("\n s1  -->	X[9]  = %X", GPR[9]);  
+	printf("\n a0  -->	X[10] = %X", GPR[10]); 
+	printf("\n a1  -->	X[11] = %X", GPR[11]); 
+	printf("\n a2  -->	X[12] = %X", GPR[12]); 
+	printf("\n a3  -->	X[13] = %X", GPR[13]); 
+	printf("\n a4  -->	X[14] = %X", GPR[14]); 
+	printf("\n a5  -->	X[15] = %X", GPR[15]);
+	printf("\n a6  -->	X[16] = %X", GPR[16]);
+	printf("\n a7  -->	X[17] = %X", GPR[17]);
+	printf("\n s2  -->	X[18] = %X", GPR[18]);
+	printf("\n s3  -->	X[19] = %X", GPR[19]);
+	printf("\n s4  -->	X[20] = %X", GPR[20]);
+	printf("\n s5  -->	X[21] = %X", GPR[21]);
+	printf("\n s6  -->	X[22] = %X", GPR[22]);
+	printf("\n s7  -->	X[23] = %X", GPR[23]);
+	printf("\n s8  -->	X[24] = %X", GPR[24]);
+	printf("\n s9  -->	X[25] = %X", GPR[25]);
+	printf("\n s10 -->	X[26] = %X", GPR[26]);
+	printf("\n s11 -->	X[27] = %X", GPR[27]);
+	printf("\n t3  -->	X[28] = %X", GPR[28]);
+	printf("\n t4  -->	X[29] = %X", GPR[29]);
+	printf("\n t5  -->	X[30] = %X", GPR[30]);
+	printf("\n t6  -->	X[31] = %X", GPR[31]);
 }
 
 int main(int argc, char *argv[])
@@ -1460,7 +1364,7 @@ int main(int argc, char *argv[])
 	int step_ip = 1;
 
                 if(argc==1){
-                char* first_param="ip_file=tracefile.txt";
+                char* first_param="ip_file=program.mem";
                 char* sec_param="start_addr=0";
                 char* third_param="stack_addr=65535";
                 params(first_param,sec_param,third_param);
@@ -1489,8 +1393,8 @@ int main(int argc, char *argv[])
         fname=params_final[1];
  	unsigned int pc_dec=0;
         pc=hextodec(params_final[2],pc_dec);        
-	gpr_arr[2]=atoi(params_final[3]);
-        printf("\nip_file = %s , start_addr = %X, stack_addr = %X\n",fname,pc,gpr_arr[2]);
+	GPR[2]=atoi(params_final[3]);
+        printf("\nip_file = %s , start_addr = %X, stack_addr = %X\n",fname,pc,GPR[2]);
         FILE *fp = fopen(fname, "r");
         char cr;
         size_t lines = 0;
@@ -1503,15 +1407,13 @@ int main(int argc, char *argv[])
         }
         rewind(fp);
 
-       // {
     char *data[lines];
     size_t n;
     char* addr[lines];
     char* inst[lines];
-        //char hexvalue[8];
-        char* inst_bin[lines];
-        unsigned  int inst_dec[lines];
-        unsigned  int addr_dec[lines];
+    char* inst_bin[lines];
+    unsigned  int inst_dec[lines];
+    unsigned  int addr_dec[lines];
     char* token;
     for (size_t i = 0; i < lines; i++) {
       data[i] = NULL;
@@ -1522,27 +1424,20 @@ int main(int argc, char *argv[])
 
     for (size_t i = 0; i < lines; i++) {
         remove_white_spaces(data[i]);
-         //printf("%s", data[i]);
         addr[i] = strtok(data[i],":");
 
         inst[i] = strtok(NULL,":");
         remove_extra_char(inst[i]);
         remove_extra_char(addr[i]);
          unsigned int decvalue=0;
-        //inst_bin[i]=hextobin(inst[i],binvalue);
         inst_dec[i]=hextodec(inst[i],decvalue);
         addr_dec[i]=hextodec(addr[i],decvalue);
-        //printf("addr=%s, addr_dec=%u, inst=%s, inst_dec=%u \n",addr[i],addr_dec[i],inst[i],inst_dec[i]);
-                //parse_inst_2(addr_dec[i], inst_dec[i]);
-                //printf("\n-------------------------------------------------------------------------------\n");
     }
 
         while(1){
                 for(size_t i=0; i<lines; i++)
                 {
                         if(addr_dec[i]%4 !=0 || addr_dec[i]>65535){
-                        //Instruction address should always be word addressable, because each instruction is 4 bytes.
-                        //Also, the maximum value the address can hold is 2^16 - 1 = 65535
                                 printf("\nInvalid Address = %X\n", addr_dec[i]);
                                 exit(0);
                         }
