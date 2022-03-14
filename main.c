@@ -476,13 +476,9 @@ else
 //printf("\n new contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
 }
 
-void SLTU(int rd,int rs2,int x0){
-//printf("\n contents in gpr are rd=%x,rs2=%x,x0=0",gpr_arr[rd],gpr_arr[rs2]);
-if ((gpr_arr[rs2])!= x0)
-	gpr_arr[rd]= 1;
-else
-	gpr_arr[rd]= 0;
-//printf("\n contents in gpr are rd=%x,rs2=%x,x0=0",gpr_arr[rd],gpr_arr[rs2]);
+void SLTU(int rd,int rs1,int rs2){
+if((unsigned int)gpr_arr[rs1] < (unsigned int)gpr_arr[rs2]) gpr_arr[rd] = 1;
+else gpr_arr[rd] = 0;
 }
 
 void AND(int rd,int rs1,int rs2){
@@ -513,6 +509,28 @@ void SRL(int rd,int rs1,int rs2){
 //printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
 gpr_arr[rd]=gpr_arr[rs1] >> gpr_arr[rs2];
 //printf("\n contents in gpr are rd=%x,rs2=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
+}
+
+void SRA(int rd,int rs1,int rs2){
+
+	//int rs2_msb;
+	unsigned int shift_val;
+	unsigned int temp;
+	//rs2_msb = rs2>>31;
+    //if( rs2_msb == 1 ) {
+	//	unsigned int up=0xFFFFFFFF;
+	//	shift_val = up - gpr_arr[rs2] + 1;
+	//	temp = (unsigned int)gpr_arr[rs1];
+	//	gpr_arr[rd] = temp >> shift_val;
+	//}
+	//else
+	//{
+		shift_val = (unsigned int)gpr_arr[rs2];
+		gpr_arr[rd] = gpr_arr[rs1] >> shift_val;
+	//}
+
+//gpr_arr[rd]=gpr_arr[rs1] >> gpr_arr[rs2];
+
 }
 
 /*int UPPER(int imm,unsigned int up ){
@@ -643,6 +661,22 @@ void SRLI(int rd,int rs1,int shamt){
 //printf("\n contents in gpr are rd=%x,rs1=%x,shamt=%x",gpr_arr[rd],gpr_arr[rs1],shamt);
 gpr_arr[rd]=gpr_arr[rs1] >> shamt;
 //printf("\n contents in gpr are rd=%x,rs1=%x,shamt=%x",gpr_arr[rd],gpr_arr[rs1],shamt);
+}
+
+void SRAI(int rd,int rs1, int shamt){
+unsigned int temp, shift_val;
+
+		printf("\nshamt = %X", shamt);
+
+		//shift_val = (unsigned int) shamt;
+		temp = (unsigned int)gpr_arr[rs1];
+		printf("\ntemp = %X, %u", temp, temp);
+		//gpr_arr[rd] = temp >> shamt;
+		gpr_arr[rd] = gpr_arr[rs1] >> shamt;
+
+//temp = (unsigned int) gpr_arr[rs1];
+//gpr_arr[rd] = temp >> shamt;
+
 }
 
 unsigned int hextodec(char hexvalue[8], unsigned int decvalue){
@@ -843,7 +877,7 @@ void decode_instr(unsigned int addr, unsigned int inst)
 
                 case 3: // SLTU
                     printf("Calling SLTU function");
-		    printf("\nFUNCTION NOT YET IMPLEMENTED"); //TODO
+			SLTU(rd, rs1, rs2);
                     break;
 
                 case 4: // XOR
@@ -859,7 +893,7 @@ void decode_instr(unsigned int addr, unsigned int inst)
                     } else if (funct7 == 32)
                     {
                         printf("Calling SRA function");
-			printf("\nFUNCTION NOT YET IMPLEMENTED"); //TODO
+			SRA(rd, rs1, rs2);
                     } else
                     {
                         printf("Invalid instruction");
@@ -952,6 +986,8 @@ void decode_instr(unsigned int addr, unsigned int inst)
                     {
                         printf("Calling SRAI function");
 			printf("\n FUNCTION NOT YET IMPLEMENTED"); //TODO
+			SRAI(rd, rs1, shamt);
+			//SRA(rd, rs1, shamt);
                     } else
                     {
                         printf("Invalid instruction");
