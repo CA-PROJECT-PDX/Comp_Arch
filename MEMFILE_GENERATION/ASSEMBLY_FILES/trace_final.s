@@ -1,0 +1,35 @@
+lui t0,1048575
+addi t0,t0,100 
+lui t1,500
+lui s0, 300
+lui s1,400
+lui s2,100
+add s3,t1,s0
+sub s4,s3,s0
+xor s5,s4,s3
+or s6,s3,t1
+and s7,s6,s3
+sll s1,s2,t0
+srl t3,t0,s0
+sra t4,s1,s3
+slt t2,s1,s3
+sltu t5,s4,s5
+andi t2,t4,100
+ori t3,t5,201
+xori s2,s3,5
+slli s4,s5,6
+srli s2,t0,20
+srai s2,s5,12
+sltiu s5,t4,72
+slti t0, s4,20
+addi t3,x0,4
+addi t4,x0,-600
+sw t4,100(t3)
+lw t5,100(t3)
+lui t0,1048575
+lui t2,101
+addi t3,x0,4
+addi t4,x0,-7
+sb t4,100(t3)
+lb t5,100(t3)
+jr ra
