@@ -10,8 +10,8 @@ int gpr_arr[32];
 int8_t mem_arr[65536];
 unsigned int pc;
 char* params_final[3];
-int debug_en = 1;
-int print_en = 1;
+int debug_en = 1; //For debugging
+int print_en = 1; //1 - Verbose mode; 0 - Silent mode
 
 void params(char first_param[1000],char sec_param[1000],char third_param[1000]){
         char fname[1000],strt_addr[1000],stk_addr[1000];
@@ -1353,6 +1353,7 @@ int main(int argc, char *argv[])
 {
     char unsigned instr[32];
     unsigned int instr1;
+	int step_ip = 1;
 
                 if(argc==1){
                 char* first_param="ip_file=tracefile.txt";
@@ -1451,6 +1452,10 @@ int main(int argc, char *argv[])
                             decode_instr(addr_dec[i], inst_dec[i]);
 							if(print_en)display_regs();
                             printf("\n-------------------------------------------------------------------------------\n");
+							if(step_ip && print_en){
+								printf("\n Continue to next instruction or print all (1/0)?");
+								scanf("%d", &step_ip);
+							}
                         }
                         else if(pc == addr_dec[i] && inst_dec[i]==0x8067)
                         {
