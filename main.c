@@ -463,7 +463,7 @@ gpr_arr[rd]=gpr_arr[rs1]+gpr_arr[rs2];
 }
 void SUB(int rd,int rs1,int rs2){
 //printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
-gpr_arr[rd]= gpr_arr[rs2] - gpr_arr[rs1];
+gpr_arr[rd]= gpr_arr[rs1] - gpr_arr[rs2];
 //printf("\n new contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
 }
 
@@ -506,9 +506,12 @@ gpr_arr[rd]=gpr_arr[rs1] << gpr_arr[rs2];
 }
 
 void SRL(int rd,int rs1,int rs2){
-//printf("\n contents in gpr are rd=%x,rs1=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
-gpr_arr[rd]=gpr_arr[rs1] >> gpr_arr[rs2];
-//printf("\n contents in gpr are rd=%x,rs2=%x,rs2=%x",gpr_arr[rd],gpr_arr[rs1],gpr_arr[rs2]);
+int mask,shft_amt;
+unsigned int u_rs1;
+mask=31;
+u_rs1=gpr_arr[rs1];
+shft_amt=mask & gpr_arr[rs2];
+gpr_arr[rd]=u_rs1 >> shft_amt;
 }
 
 void SRA(int rd,int rs1,int rs2){
@@ -679,6 +682,58 @@ unsigned int temp, shift_val;
 
 }
 
+void MUL(int rd, int rs1, int rs2){
+	//int rs1_sign = rs1>>31;
+	//int rs2_sign = rs2>>31;
+	gpr_arr[rd] = gpr_arr[rs1] * gpr_arr[rs2];
+}
+
+void MULH(int rd, int rs1, int rs2){
+	unsigned long long int temp;
+	temp = gpr_arr[rs1] * gpr_arr[rs2];
+	gpr_arr[rd] = temp>>32;
+}
+
+void MULHU(int rd, int rs1, int rs2){
+	unsigned long long int temp;
+	temp = (unsigned int)gpr_arr[rs1] * (unsigned int)gpr_arr[rs2];
+	gpr_arr[rd] = temp>>32;
+}
+
+void MULHSU(int rd, int rs1, int rs2){
+	unsigned long long int temp;
+	temp = gpr_arr[rs1] * (unsigned int)gpr_arr[rs2];
+	gpr_arr[rd] = temp>>32;
+}
+
+void DIV(int rd, int rs1, int rs2){
+	if(gpr_arr[rs2] !=0 )
+		gpr_arr[rd] = gpr_arr[rs1]/gpr_arr[rs2];
+	else
+		gpr_arr[rd] = 0xFFFFFFFF;
+}
+
+void DIVU(int rd, int rs1, int rs2){
+	if(gpr_arr[rs2] !=0 )
+		gpr_arr[rd] = (unsigned int)gpr_arr[rs1] / (unsigned int) gpr_arr[rs2];
+	else
+		gpr_arr[rd] = 0xFFFFFFFF;
+}
+
+void REM(int rd, int rs1, int rs2){ //TODO check for negative gpr_arr[rs1]
+	if(gpr_arr[rs2] !=0 )
+		gpr_arr[rd] = gpr_arr[rs1] % gpr_arr[rs2];
+	else
+		gpr_arr[rd] = gpr_arr[rs1];
+}
+
+void REMU(int rd, int rs1, int rs2){
+	if(gpr_arr[rs2] !=0)
+		gpr_arr[rd] = (unsigned int)gpr_arr[rs1] & (unsigned int) gpr_arr[rs2];
+	else
+		gpr_arr[rd] = (unsigned int)gpr_arr[rs1];
+}
+
 unsigned int hextodec(char hexvalue[8], unsigned int decvalue){
 
     int place;
@@ -846,7 +901,8 @@ void decode_instr(unsigned int addr, unsigned int inst)
             printf("funct3 = %u\n", funct3);
             printf("funct7 = %u\n", funct7);
 			}
-
+	
+			if(funct7 != 1){
             switch(funct3){
 
                 case 0: // ADD or SUB
@@ -915,6 +971,54 @@ void decode_instr(unsigned int addr, unsigned int inst)
                     printf("Invalid Instruction");
 		    exit(0);
             }
+			} else if(funct7 == 1) { //MUL instructions
+				switch (funct3){
+					
+					case 0:
+					printf("Calling MUL instruction");
+					MUL(rd, rs1, rs2);
+					break;
+					
+					case 1:
+					printf("Calling MULH instruction");
+					MULH(rd, rs1, rs2);
+					break;
+					
+					case 2:
+					printf("Calling MULHSU instruction");
+					MULHSU(rd, rs1, rs2);
+					break;
+					
+					case 3:
+					printf("Calling MULHU instruction");
+					MULHU(rd, rs1, rs2);
+					break;
+					
+					case 4:
+					printf("Calling DIV instruction");
+					DIV(rd, rs1, rs2);
+					break;
+					
+					case 5:
+					printf("Calling DIVU instruction");
+					DIVU(rd, rs1, rs2);
+					break;
+					
+					case 6:
+					printf("Calling REM instruction");
+					REM(rd, rs1, rs2);
+					break;
+					
+					case 7:
+					printf("Calling REMU instruction");
+					REMU(rd, rs1, rs2);MUL(rd, rs1, rs2);
+					break;
+					
+					default:
+					printf("Invalid Instruction");
+					exit(0);
+				}
+			}
             break;
 
             case 19 : //OPCODE == 0010011  // I-Type instruction
@@ -1306,9 +1410,9 @@ void decode_instr(unsigned int addr, unsigned int inst)
     }
 	
 	if(gpr_arr[0] != 0){
-		printf("ERROR: Trying to write into X0");
+		//printf("ERROR: Trying to write into X0");
 		gpr_arr[0] = 0;
-		exit(0);
+		//exit(0);
 	}
 	
     if(pc_flag==0)
