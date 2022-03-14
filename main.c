@@ -6,7 +6,8 @@
 #include <stdint.h>
 
 int GPR[32];
-int8_t MEM[65536];
+//int8_t MEM[65536];
+unsigned int MEM[16384];
 unsigned int pc;
 char* params_final[3];
 int debug_en = 1; //For debugging
@@ -166,25 +167,29 @@ void two_params(char first_param[1000],char sec_param[1000]){
                         }
 }
 
+// INSTRUCTION IMPLEMENTATION AS FUNCTIONS
+
 void LB(int rd,int rs1, int imm){
     int imm_new = imm>>11;
     unsigned int location =0;
     if (imm_new)
     {
-		unsigned int up=0xFFF;
+                unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
-		imm = -imm;  
+                imm = -imm;
     }
-	location = GPR[rs1]+imm;
-    
+        location = GPR[rs1]+imm;
+
     int forsignEinReg = MEM[location];
+int mask=255;
+        forsignEinReg=forsignEinReg & mask;
     int negorpos = forsignEinReg >> 7;
-    
+
     if(negorpos)
     {
-		unsigned int up1=0xFF;
+                unsigned int up1=0xFF;
         forsignEinReg=up1-forsignEinReg+1;//2's complement
-		forsignEinReg = -forsignEinReg;
+                forsignEinReg = -forsignEinReg;
         GPR[rd] = forsignEinReg;
     }
     else
@@ -198,104 +203,83 @@ void LH(int rd,int rs1, int imm){
     unsigned int location =0;
     if (imm_new)
     {
-		unsigned int up=0xFFF;
+                unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
-		imm = -imm; 
-    }
-	location = GPR[rs1]+imm;
-	
-    if(location % 2 ==0)
-    {
-		int lsb = MEM[location];
-		int msb = MEM[location+1];
-		msb = msb<<8;
-		int forsignEinReg = msb +lsb;
-		int negorpos = forsignEinReg >> 15;
-    
-		if(negorpos)
-		{
-			unsigned int up1=0xFF;
-			forsignEinReg=up1-forsignEinReg+1;//2's complement
-			forsignEinReg = -forsignEinReg;
-		}
-        GPR[rd] = forsignEinReg;    
-	}
-	else
-	{
-		printf("\n ERROR: lh failed as the memory array location is not aligned");
-		exit(0);
-	}
-}
-
-void LW(int rd,int rs1, int imm){
-    int imm_new = imm>>11;
-    unsigned int location =0;
-    if (imm_new)
-    {
-		unsigned int up=0xFFF;
-        imm=up-imm+1;//2's complement
-		imm = -imm; 
+                imm = -imm;
     }
         location = GPR[rs1]+imm;
-		
-    if(location % 4 ==0)
+
+    if(location % 2 ==0)
     {
-		int one = MEM[location];
-		int two = MEM[location+1];
-		two = two<<8;
-		int three = MEM[location+2];
-		three = three<16;
-		int four = MEM[location+3];
-		four = four<<24;
-		int forsignEinReg = one+two+three+four;
-		
-		GPR[rd] = forsignEinReg;
-	}
-	else
-	{
-		printf("\n ERROR: lw failed as the memory array location is not aligned");
-		exit(0);
-	}
+                int lsb = MEM[location] & 255;
+                int msb = MEM[location+1]>>8 & 255;
+                printf("mem(%d)=%d,mem2(%d)=%d",location,MEM[location],location+1,MEM[location+1]);
+                msb = msb<<8;
+                int forsignEinReg = msb +lsb;
+                int negorpos = forsignEinReg >> 15;
+
+                if(negorpos)
+                {
+                        unsigned int up1=0xFFFF;
+                        forsignEinReg=up1-forsignEinReg+1;//2's complement
+                        forsignEinReg = -forsignEinReg;
+                }
+        GPR[rd] = forsignEinReg;
+        }
+        else
+        {
+                printf("\n ERROR: lh failed as the memory array location is not aligned");
+                exit(0);
+        }
 }
 
 void LBU(int rd,int rs1, int imm){
     int imm_new = imm>>11;
     unsigned int location =0;
-	if (imm_new)
+    int rd_val_msb;
+    unsigned int rd_val;
+    unsigned int up1=0xFF;
+        if (imm_new)
     {
-		unsigned int up=0xFFF;
+                unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
-		imm = -imm; 
-	}
+                imm = -imm;
+        }
     location = GPR[rs1]+imm;
-    GPR[rd] = MEM[location];
+    rd_val= MEM[location];
+    rd_val=rd_val & 255;
+    rd_val_msb=rd_val>>7;
+    if(rd_val_msb)
+    rd_val=up1-rd_val+1;
+    GPR[rd] = rd_val;
 }
 
 void LHU(int rd,int rs1, int imm){
     int imm_new = imm>>11;
     unsigned int location =0;
-	if (imm_new)
+        if (imm_new)
     {
-		unsigned int up=0xFFF;
+                unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
-		imm = -imm; 
-	}
+                imm = -imm;
+        }
 
     location = GPR[rs1]+imm;
     if(location % 2 ==0)
     {
-		int lsb = MEM[location];
-		int msb = MEM[location+1];
-		msb = msb<<8;
-		int forsignEinReg = msb +lsb;
-	
-		GPR[rd] = forsignEinReg;
-	}
-	else
-	{
-		printf("\n ERROR: lb failed as the memory array location is not aligned");
-		exit(0);
-	}
+                int lsb = MEM[location] & 255;
+                unsigned int msb = MEM[location+1]>>8;
+                msb=msb & 255;
+                msb = msb<<8;
+                int forsignEinReg = msb +lsb;
+
+                GPR[rd] = forsignEinReg;
+        }
+        else
+        {
+                printf("\n ERROR: lb failed as the memory array location is not aligned");
+                exit(0);
+        }
 }
 
 void SB(int rs1,int rs2, int imm){
@@ -303,19 +287,13 @@ void SB(int rs1,int rs2, int imm){
     unsigned int location =0;
     if (imm_new)
     {
-		unsigned int up=0xFFF;
+                unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
-		imm = -imm; 
+                imm = -imm;
     }
+        int val=GPR[rs2] & 255;
         location = GPR[rs1]+imm;
-
-    MEM[location] = GPR[rs2];
-}
-
-void AUIPC(int rd,int imm, int pc1){
-int imm_new;
-imm_new = imm<<12;
-GPR[rd] = imm_new+pc1;
+    MEM[location] =val;
 }
 
 void SH(int rs1,int rs2, int imm){
@@ -323,22 +301,55 @@ void SH(int rs1,int rs2, int imm){
     unsigned int location =0;
     if (imm_new)
     {
-		unsigned int up=0xFFF;
+                unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
-		imm = -imm; 
+                imm = -imm;
     }
         location = GPR[rs1]+imm;
-    
+    int val=GPR[rs2] & 255;
+    int val1=GPR[rs2]>>8 & 255;
     if(location %2 ==0)
     {
-    MEM[location] = GPR[rs2];
-    MEM[location+1] = GPR[rs2]>>8;
+    MEM[location] = val;
+    MEM[location+1] = val1;
+    printf("mem(%d)=%d,mem(%d)=%d",location,val,location+1,val1);
     }
     else
     {
         printf("\n ERROR: SH memory location is not aligned");
-		exit(0);
+                exit(0);
     }
+}
+
+void LW(int rd,int rs1, int imm){
+    int imm_new = imm>>11;
+    unsigned int location =0;
+    if (imm_new)
+    {
+                unsigned int up=0xFFF;
+        imm=up-imm+1;//2's complement
+                imm = -imm;
+    }
+        location = GPR[rs1]+imm;
+
+    if(location % 4 ==0)
+    {
+                int one = MEM[location] & 255;
+                int two = MEM[location+1] & 255;
+                two = two<<8;
+                int three = MEM[location+2] & 255;
+                three = three<<16;
+                int four = MEM[location+3] & 255;
+                four = four<<24;
+                int forsignEinReg = one+two+three+four;
+                printf("%d,%d,%d,%d",MEM[location],MEM[location+1],MEM[location+2],MEM[location+3]);
+                GPR[rd] = forsignEinReg;
+        }
+        else
+        {
+                printf("\n ERROR: lw failed as the memory array location is not aligned");
+                exit(0);
+        }
 }
 
 void SW(int rs1,int rs2, int imm){
@@ -346,24 +357,31 @@ void SW(int rs1,int rs2, int imm){
     unsigned int location =0;
     if (imm_new)
     {
-		unsigned int up=0xFFF;
+                unsigned int up=0xFFF;
         imm=up-imm+1;//2's complement
-		imm = -imm; 
+                imm = -imm;
     }
         location = GPR[rs1]+imm;
-    
+
     if(location %4 ==0)
     {
-    MEM[location] = GPR[rs2];
-    MEM[location+1] = GPR[rs2]>>8;
-    MEM[location+2] = GPR[rs2]>>16;
-    MEM[location+3] = GPR[rs2]>>24;
+    MEM[location] = GPR[rs2] & 255;
+    MEM[location+1] = GPR[rs2]>>8 & 255;
+    MEM[location+2] = GPR[rs2]>>16 & 255;
+    MEM[location+3] = GPR[rs2]>>24 & 255;
+    printf("%d,%d,%d,%d",MEM[location],MEM[location+1],MEM[location+2],MEM[location+3]);
     }
     else
     {
         printf("\n ERROR: SW memory location is not aligned");
-		exit(0);
+                exit(0);
     }
+}
+
+void AUIPC(int rd,int imm, int pc1){
+int imm_new;
+imm_new = imm<<12;
+GPR[rd] = imm_new+pc1;
 }
 
 void LUI(int rd,int imm){
@@ -578,7 +596,9 @@ GPR[rd]=GPR[rs1] << shamt;
 }
 
 void SRLI(int rd,int rs1,int shamt){
-GPR[rd]=GPR[rs1] >> shamt;
+unsigned int u_rs1;
+u_rs1=GPR[rs1];
+GPR[rd]=u_rs1 >> shamt;
 }
 
 void SRAI(int rd,int rs1, int shamt){
@@ -756,13 +776,14 @@ char *remove_extra_char(char *str)
         return str;
 }
 
+//INSTRUCTION DECODE
 
 void decode_instr(unsigned int addr, unsigned int inst)
 {
     unsigned int mask, opcode, funct3, funct7, rs1, rs2, rd, shamt, imm, imm1, imm2;
     unsigned int im1, im2, im3;
     int pc_flag=0;
-    if(addr%4 != 0) //TODO remove this check
+    if(addr%4 != 0) 
     {
         printf("\nINVALID ADDRESS\n");
 		exit(0);
@@ -806,10 +827,12 @@ void decode_instr(unsigned int addr, unsigned int inst)
                 case 0: // ADD or SUB
                     if(funct7 == 0)
                     {
+			if(debug_en)
                         printf("Calling ADD function");
                         ADD(rd, rs1, rs2);
                     } else if (funct7 == 32)
                     {
+			if(debug_en)
                         printf("Calling SUB function");
 			SUB(rd, rs1, rs2);
                     } else
@@ -820,21 +843,25 @@ void decode_instr(unsigned int addr, unsigned int inst)
                     break;
 
                 case 1: // SLL
+		    if(debug_en)
                     printf("Calling SLL function");
 		    SLL(rd, rs1, rs2);
                     break;
 
                 case 2: // SLT
+		    if(debug_en)
                     printf("Calling SLT function");
 		    SLT(rd, rs1, rs2);
                     break;
 
                 case 3: // SLTU
+		    if(debug_en)
                     printf("Calling SLTU function");
-			SLTU(rd, rs1, rs2);
+		    SLTU(rd, rs1, rs2);
                     break;
 
                 case 4: // XOR
+		    if(debug_en)
                     printf("Calling XOR function");
 		    XOR(rd, rs1, rs2);
                     break;
@@ -842,10 +869,12 @@ void decode_instr(unsigned int addr, unsigned int inst)
                 case 5: // SRL/SRA
                     if(funct7 == 0)
                     {
+			if(debug_en)
                         printf("Calling SRL function");
 			SRL(rd, rs1, rs2);
                     } else if (funct7 == 32)
                     {
+			if(debug_en)
                         printf("Calling SRA function");
 			SRA(rd, rs1, rs2);
                     } else
@@ -856,11 +885,13 @@ void decode_instr(unsigned int addr, unsigned int inst)
                     break;
 
                 case 6: // OR
+		    if(debug_en)
                     printf("Calling OR function");
 		    OR(rd, rs1, rs2);
                     break;
 
                 case 7: // AND
+		    if(debug_en)
                     printf("Calling AND function");
 		    AND(rd, rs1, rs2);
                     break;
@@ -873,41 +904,49 @@ void decode_instr(unsigned int addr, unsigned int inst)
 				switch (funct3){
 					
 					case 0:
+					if(debug_en)
 					printf("Calling MUL instruction");
 					MUL(rd, rs1, rs2);
 					break;
 					
 					case 1:
+					if(debug_en)
 					printf("Calling MULH instruction");
 					MULH(rd, rs1, rs2);
 					break;
 					
 					case 2:
+					if(debug_en)
 					printf("Calling MULHSU instruction");
 					MULHSU(rd, rs1, rs2);
 					break;
 					
 					case 3:
+					if(debug_en)
 					printf("Calling MULHU instruction");
 					MULHU(rd, rs1, rs2);
 					break;
 					
 					case 4:
+					if(debug_en)
 					printf("Calling DIV instruction");
 					DIV(rd, rs1, rs2);
 					break;
 					
 					case 5:
+					if(debug_en)
 					printf("Calling DIVU instruction");
 					DIVU(rd, rs1, rs2);
 					break;
 					
 					case 6:
+					if(debug_en)
 					printf("Calling REM instruction");
 					REM(rd, rs1, rs2);
 					break;
 					
 					case 7:
+					if(debug_en)
 					printf("Calling REMU instruction");
 					REMU(rd, rs1, rs2);MUL(rd, rs1, rs2);
 					break;
@@ -955,26 +994,31 @@ void decode_instr(unsigned int addr, unsigned int inst)
             switch(funct3){
 
                 case 0: //ADDI
+		    if(debug_en)
                     printf("Calling ADDI function");
 		    ADDI(rd, rs1, imm);
                     break;
 
                 case 1: //SLLI
+		    if(debug_en)
                     printf("Calling SLLI function");
 		    SLLI(rd, rs1, shamt);
                     break;
 
                 case 2: //SLTI
+		    if(debug_en)
                     printf("Calling SLTI function");
 		    SLTI(rd, rs1, imm);
                     break;
 
                 case 3: //SLTIU
+		    if(debug_en)
                     printf("Calling SLTIU function");
 		    SLTIU(rd, rs1, imm);
                     break;
 
                 case 4: //XORI
+		    if(debug_en)
                     printf("Calling XORI function");
 		    XORI(rd, rs1, imm);
                     break;
@@ -982,12 +1026,13 @@ void decode_instr(unsigned int addr, unsigned int inst)
                 case 5: //SRLI or SRAI
                     if(funct7 == 0)
                     {
+		        if(debug_en)
                         printf("Calling SRLI function");
 			SRLI(rd, rs1, shamt);
                     } else if (funct7 == 32)
                     {
+		        if(debug_en)
                         printf("Calling SRAI function");
-			printf("\n FUNCTION NOT YET IMPLEMENTED"); //TODO
 			SRAI(rd, rs1, shamt);
                     } else
                     {
@@ -997,11 +1042,13 @@ void decode_instr(unsigned int addr, unsigned int inst)
                     break;
 
                 case 6: //ORI
+		    if(debug_en)
                     printf("Calling ORI function");
 		    ORI(rd, rs1, imm);
                     break;
 
                 case 7: //ANDI
+		    if(debug_en)
                     printf("Calling ANDI function");
 		    ANDI(rd, rs1, imm);
                     break;
@@ -1047,16 +1094,19 @@ void decode_instr(unsigned int addr, unsigned int inst)
             switch(funct3){
 
                 case 0: //SB
+		    if(debug_en)
                     printf("Calling SB function");
 		    SB(rs1, rs2, imm);
                     break;
 
                 case 1: //SH
+		    if(debug_en)
                     printf("Calling SH function");
 		    SH(rs1, rs2, imm);
                     break;
 
                 case 2: //SW
+		    if(debug_en)
                     printf("Calling SW function");
 		    SW(rs1, rs2, imm);
                     break;
@@ -1093,26 +1143,31 @@ void decode_instr(unsigned int addr, unsigned int inst)
             switch(funct3){
 
                 case 0: //LB
+		    if(debug_en)
                     printf("Calling LB function");
 		    LB(rd, rs1, imm);
                     break;
 
                 case 1: //LH
+		    if(debug_en)
                     printf("Calling LH function");
 		    LH(rd, rs1, imm);
                     break;
 
                 case 2: //LW
+		    if(debug_en)
                     printf("Calling LW function");
 		    LW(rd, rs1, imm);
                     break;
 
                 case 4: //LBU
+		    if(debug_en)
                     printf("Calling LBU function");
 		    LBU(rd, rs1, imm);
                     break;
 
                 case 5: //LHU
+		    if(debug_en)
                     printf("Calling LHU function");
 		    LHU(rd, rs1, imm);
                     break;
@@ -1160,36 +1215,42 @@ void decode_instr(unsigned int addr, unsigned int inst)
             switch(funct3){
 
                 case 0: //BEQ
+		    if(debug_en)
                     printf("Calling BEQ function");
                     BEQ(imm, rs1, rs2);
                     pc_flag = 1;
                     break;
 
                 case 1: //BNE
+		    if(debug_en)
                     printf("Calling BNE function");
                     BNE(imm, rs1, rs2);
                     pc_flag = 1;
                     break;
 
                 case 4: //BLT
+		    if(debug_en)
                     printf("Calling BLT function");
                     BLT(imm, rs1, rs2);
                     pc_flag = 1;
                     break;
 
                 case 5: //BGE
+		    if(debug_en)
                     printf("Calling BGE function");
                     BGE(imm, rs1, rs2);
                     pc_flag = 1;
                     break;
 
                 case 6: //BLTU
+		    if(debug_en)
                     printf("Calling BLTU function");
                     BLTU(imm, rs1, rs2);
                     pc_flag = 1;
                     break;
 
                 case 7: //BGEU
+		    if(debug_en)
                     printf("Calling BGEU function");
                     BGEU(imm, rs1, rs2);
                     pc_flag = 1;
@@ -1226,6 +1287,7 @@ void decode_instr(unsigned int addr, unsigned int inst)
 
             if(funct3 == 0)
             {
+		if(debug_en)
                 printf("Calling JALR function");
 		JALR(rd, rs1, imm);
                 pc_flag = 1;
@@ -1253,6 +1315,7 @@ void decode_instr(unsigned int addr, unsigned int inst)
             printf("imm = %u\n", imm);
 	    }
 
+	    if(debug_en)
             printf("Calling JAL instruction");
 	    JAL(rd, imm);
             pc_flag = 1;
@@ -1271,6 +1334,7 @@ void decode_instr(unsigned int addr, unsigned int inst)
             printf("imm = %u\n", imm);
 	    }
 
+	    if(debug_en)
             printf("Calling AUIPC instruction");
 	    AUIPC(rd, imm, pc);
             break;
@@ -1288,6 +1352,7 @@ void decode_instr(unsigned int addr, unsigned int inst)
             printf("imm = %u\n", imm);
 	    }
 
+	    if(debug_en)
             printf("Calling LUI instruction");
 	    LUI(rd, imm);
             break;
@@ -1295,7 +1360,8 @@ void decode_instr(unsigned int addr, unsigned int inst)
 
 
             default :
-                printf("Not a valid instruction\n" );
+                printf("\nERROR: OPCODE Not supported\n" );
+		exit(0);
         }
     }
 	
@@ -1474,7 +1540,7 @@ int main(int argc, char *argv[])
                                 }
                                 if(pc_found == 0)
                                 {
-                                        printf("\nPC = %X - not found in instruction address\n", pc); //TODO - print pc in hex
+                                        printf("\nPC = %X - not found in instruction address\n", pc); 
                                         exit(0);
                                 }
                         }
