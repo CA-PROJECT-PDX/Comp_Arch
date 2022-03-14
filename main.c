@@ -13,8 +13,8 @@ char* params_final[3];
 int debug_en = 1;
 int print_en = 1;
 
-void params(char first_param[100],char sec_param[100],char third_param[100]){
-        char fname[100],strt_addr[100],stk_addr[100];
+void params(char first_param[1000],char sec_param[1000],char third_param[1000]){
+        char fname[1000],strt_addr[1000],stk_addr[1000];
         if(strstr(first_param,"ip_file="))
             for(int i=0;i<100;i++)
             fname[i]=first_param[i];
@@ -59,8 +59,8 @@ void params(char first_param[100],char sec_param[100],char third_param[100]){
 
 }
 
-void one_params(char first_param[100]){
-        char fname[100],strt_addr[100],stk_addr[100];
+void one_params(char first_param[1000]){
+        char fname[1000],strt_addr[1000],stk_addr[1000];
         if(strstr(first_param,"ip_file=")){
                                 for(int i=0;i<100;i++)
                                 fname[i]=first_param[i];
@@ -94,8 +94,8 @@ void one_params(char first_param[100]){
 
 }
 
-void two_params(char first_param[100],char sec_param[100]){
-        char fname[100],strt_addr[100],stk_addr[100];
+void two_params(char first_param[1000],char sec_param[1000]){
+        char fname[1000],strt_addr[1000],stk_addr[1000];
         if(strstr(first_param,"ip_file=")){
                                 for(int i=0;i<100;i++)
                                 fname[i]=first_param[i];
