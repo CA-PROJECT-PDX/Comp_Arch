@@ -6,11 +6,10 @@
 #include <stdint.h>
 
 int GPR[32];
-//int8_t MEM[65536];
-unsigned int MEM[16384];
+int8_t MEM[65536];
 unsigned int pc;
 char* params_final[3];
-int debug_en = 1; //For debugging
+int debug_en = 0; //For debugging
 int print_en = 1; //1 - Verbose mode; 0 - Silent mode
 
 void params(char first_param[1000],char sec_param[1000],char third_param[1000]){
