@@ -179,9 +179,13 @@ void LB(int rd,int rs1, int imm){
                 imm = -imm;
     }
         location = GPR[rs1]+imm;
+		if(location>65535){
+			printf("\nError: Invalid Mem location\n");
+			exit(0);
+		}
 
     int forsignEinReg = MEM[location];
-int mask=255;
+	int mask=255;
         forsignEinReg=forsignEinReg & mask;
     int negorpos = forsignEinReg >> 7;
 
@@ -207,13 +211,16 @@ void LH(int rd,int rs1, int imm){
         imm=up-imm+1;//2's complement
                 imm = -imm;
     }
-        location = GPR[rs1]+imm;
+    location = GPR[rs1]+imm;
+	if(location>65535){
+		printf("\nError: Invalid Mem location\n");
+		exit(0);
+	}
 
     if(location % 2 ==0)
     {
                 int lsb = MEM[location] & 255;
                 int msb = MEM[location+1]>>8 & 255;
-                printf("mem(%d)=%d,mem2(%d)=%d",location,MEM[location],location+1,MEM[location+1]);
                 msb = msb<<8;
                 int forsignEinReg = msb +lsb;
                 int negorpos = forsignEinReg >> 15;
@@ -246,6 +253,10 @@ void LBU(int rd,int rs1, int imm){
                 imm = -imm;
         }
     location = GPR[rs1]+imm;
+	if(location>65535){
+			printf("\nError: Invalid Mem location\n");
+			exit(0);
+	}
     rd_val= MEM[location];
     rd_val=rd_val & 255;
     rd_val_msb=rd_val>>7;
@@ -265,6 +276,10 @@ void LHU(int rd,int rs1, int imm){
         }
 
     location = GPR[rs1]+imm;
+	if(location>65535){
+			printf("\nError: Invalid Mem location\n");
+			exit(0);
+	}
     if(location % 2 ==0)
     {
                 int lsb = MEM[location] & 255;
@@ -293,6 +308,10 @@ void SB(int rs1,int rs2, int imm){
     }
         int val=GPR[rs2] & 255;
         location = GPR[rs1]+imm;
+	if(location>65535){
+			printf("\nError: Invalid Mem location\n");
+			exit(0);
+	}
     MEM[location] =val;
 }
 
@@ -306,13 +325,16 @@ void SH(int rs1,int rs2, int imm){
                 imm = -imm;
     }
         location = GPR[rs1]+imm;
+	if(location>65535){
+			printf("\nError: Invalid Mem location\n");
+			exit(0);
+	}
     int val=GPR[rs2] & 255;
     int val1=GPR[rs2]>>8 & 255;
     if(location %2 ==0)
     {
     MEM[location] = val;
     MEM[location+1] = val1;
-    printf("mem(%d)=%d,mem(%d)=%d",location,val,location+1,val1);
     }
     else
     {
@@ -331,6 +353,10 @@ void LW(int rd,int rs1, int imm){
                 imm = -imm;
     }
         location = GPR[rs1]+imm;
+	if(location>65535){
+			printf("\nError: Invalid Mem location\n");
+			exit(0);
+	}
 
     if(location % 4 ==0)
     {
@@ -342,7 +368,6 @@ void LW(int rd,int rs1, int imm){
                 int four = MEM[location+3] & 255;
                 four = four<<24;
                 int forsignEinReg = one+two+three+four;
-                printf("%d,%d,%d,%d",MEM[location],MEM[location+1],MEM[location+2],MEM[location+3]);
                 GPR[rd] = forsignEinReg;
         }
         else
@@ -362,6 +387,10 @@ void SW(int rs1,int rs2, int imm){
                 imm = -imm;
     }
         location = GPR[rs1]+imm;
+	if(location>65535){
+			printf("\nError: Invalid Mem location\n");
+			exit(0);
+	}
 
     if(location %4 ==0)
     {
@@ -369,7 +398,6 @@ void SW(int rs1,int rs2, int imm){
     MEM[location+1] = GPR[rs2]>>8 & 255;
     MEM[location+2] = GPR[rs2]>>16 & 255;
     MEM[location+3] = GPR[rs2]>>24 & 255;
-    printf("%d,%d,%d,%d",MEM[location],MEM[location+1],MEM[location+2],MEM[location+3]);
     }
     else
     {
