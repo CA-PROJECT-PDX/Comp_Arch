@@ -567,11 +567,16 @@ imm_msb = imm>>11;
 			GPR[rd]= 0;
 }
 void SLTIU(int rd,int rs1,int imm){
-        if ((GPR[rs1]) < (imm))
-			GPR[rd]= 1;
-		else
-			GPR[rd]= 0;
+        int imm_new=imm>>11;
+        if(imm_new){
+        imm=imm | 4294963200;
+        }
+        if (((unsigned int) GPR[rs1]) < (unsigned int) (imm))
+                        GPR[rd]= 1;
+                else
+                        GPR[rd]= 0;
 }
+
 void ANDI(int rd,int rs1,int imm){
 int imm_msb,imm_new,mask;
 imm_msb = imm>>11;
