@@ -1472,7 +1472,7 @@ int main(int argc, char *argv[])
 {
     char unsigned instr[32];
     unsigned int instr1;
-	int step_ip = 0;
+	int step_ip = 1;
 
                 if(argc==1){
                 char* first_param="ip_file=program.mem";
