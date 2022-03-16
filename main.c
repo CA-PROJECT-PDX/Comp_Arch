@@ -219,7 +219,7 @@ void LH(int rd,int rs1, int imm){
     if(location % 2 ==0)
     {
                 int lsb = MEM[location] & 255;
-                int msb = MEM[location+1]>>8 & 255;
+                int msb = MEM[location+1] & 255;
                 msb = msb<<8;
                 int forsignEinReg = msb +lsb;
                 int negorpos = forsignEinReg >> 15;
@@ -245,6 +245,7 @@ void LBU(int rd,int rs1, int imm){
     int rd_val_msb;
     unsigned int rd_val;
     unsigned int up1=0xFF;
+    unsigned int mask = 0xFFFFFF00;
         if (imm_new)
     {
                 unsigned int up=0xFFF;
@@ -258,9 +259,12 @@ void LBU(int rd,int rs1, int imm){
 	}
     rd_val= MEM[location];
     rd_val=rd_val & 255;
-    rd_val_msb=rd_val>>7;
-    if(rd_val_msb)
-    rd_val=up1-rd_val+1;
+    /*rd_val_msb=rd_val>>7;
+   if(rd_val_msb)
+   {
+   //rd_val=up1-rd_val+1;
+   rd_val = rd_val | mask;
+   }*/
     GPR[rd] = rd_val;
 }
 
@@ -282,11 +286,13 @@ void LHU(int rd,int rs1, int imm){
     if(location % 2 ==0)
     {
                 int lsb = MEM[location] & 255;
-                unsigned int msb = MEM[location+1]>>8;
-                msb=msb & 255;
+                unsigned int msb = MEM[location+1] & 255;
                 msb = msb<<8;
                 int forsignEinReg = msb +lsb;
-
+		/*unsigned int mask=0xFFFF0000;
+		int forsignEinReg_msb=forsignEinReg>>15;
+		if(forsignEinReg_msb)
+			forsignEinReg=forsignEinReg | mask;*/
                 GPR[rd] = forsignEinReg;
         }
         else
@@ -471,8 +477,11 @@ void BGEU(int imm,int rs1,int rs2){
 
 void JAL(int rd,int imm){
     GPR[rd] = pc + 4;
-	if(imm>>20 == 0) pc += (imm & 1048575);
-	else pc -= (imm & 1048575);
+	if(imm>>20 == 1) {
+		imm=1048575 -imm +1;
+		pc=pc-imm;
+	}
+	else pc=pc+imm ;
  }
  
 void JALR(int rd, int rs1, int imm){
@@ -1341,7 +1350,11 @@ void decode_instr(unsigned int addr, unsigned int inst)
             imm = imm >> 12;
 
             im1 = imm >> 19; //20th bit
-            im2 = (im1<<19) | ((imm & 255)<<11) | ((imm & 256)<<3) | ((imm & 523776)>>8);
+            //im2 = (im1<<19) | ((imm & 255)<<11) | ((imm & 256)<<3) | ((imm & 523776)>>8);
+	    int im8=(imm&255)>>11;
+            int im7=(imm&1024)>>10;
+            int im6=(imm&523776)>>9;
+		im2=im1|im8|im7|im6;
             imm = im2<<1;
        	    if(debug_en){
             printf("imm = %u\n", imm);
@@ -1459,7 +1472,7 @@ int main(int argc, char *argv[])
 {
     char unsigned instr[32];
     unsigned int instr1;
-	int step_ip = 1;
+	int step_ip = 0;
 
                 if(argc==1){
                 char* first_param="ip_file=program.mem";
